@@ -82,7 +82,7 @@
   <div class="modal">
     <button class="modal-close" id="addModalClose">&times;</button>
     <h2>Add a new wizard</h2>
-    <p class="hint">Wizards live as plain Markdown files. Upload or paste one below, or get one written for you first.</p>
+    <p class="hint">Wizards live as plain Markdown files. Upload or paste one or more below, or get one written for you first.</p>
 
     <div class="add-tabs">
       <button class="active" data-pane="paneUpload">Upload / paste .md</button>
@@ -91,16 +91,25 @@
 
     <div class="add-pane active" id="paneUpload">
       <div class="dropzone" id="dropzone">
-        Drag a <strong>.md</strong> file here, or click to choose one.
-        <input type="file" id="mdFileInput" accept=".md,text/markdown,text/plain" style="display:none">
+        Drag one or more <strong>.md</strong> files here, or click to choose them.
+        <input type="file" id="mdFileInput" accept=".md,text/markdown,text/plain" multiple style="display:none">
       </div>
-      <div class="divider">or paste it</div>
+      <div class="divider">or paste one</div>
       <div class="field">
         <textarea id="mdPasteArea" placeholder="Paste your wizard Markdown here&hellip;"></textarea>
       </div>
       <div id="parseResult"></div>
       <div style="text-align:right; margin-top:16px;">
-        <button class="btn btn-primary" id="confirmAddBtn" style="display:none;">Add to dashboard</button>
+        <button class="btn btn-primary" id="confirmAddBtn" style="display:none;">Review</button>
+      </div>
+    </div>
+
+    <div class="add-pane" id="paneReview">
+      <p class="hint" style="margin-bottom:16px;">Check how each one will show up on the dashboard. This only changes labels, not the wizard's steps or content.</p>
+      <div id="reviewList"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+        <button class="btn btn-ghost" id="reviewBackBtn">&larr; Back</button>
+        <button class="btn btn-primary" id="reviewConfirmBtn">Add to dashboard</button>
       </div>
     </div>
 

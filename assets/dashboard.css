@@ -130,3 +130,34 @@
   padding:12px 14px; margin-top:10px; font-size:0.8125rem; color:var(--tx);
 }
 .preview-box strong{ color:var(--a1); }
+
+/* ---- multi-file parse checklist (add-wizard, upload pane) ---- */
+.parse-list{ display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+.parse-item{
+  border:1px solid var(--border); border-radius:8px; background:var(--bg);
+  padding:10px 12px; display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+}
+.parse-item.has-error{ border-color:var(--danger); }
+.parse-item-main{ flex:1; min-width:0; font-size:0.8125rem; }
+.parse-item-main strong{ color:var(--a1); word-break:break-word; }
+.parse-item.has-error .parse-item-main strong{ color:var(--tx); }
+.parse-item-meta{ font-size:0.75rem; color:var(--tx-muted); margin-top:2px; }
+.parse-item-source{ font-family:var(--f-mono); font-size:0.6875rem; color:var(--tx-faint); margin-top:2px; }
+.parse-item-errors{ margin:6px 0 0; padding-left:16px; font-size:0.75rem; color:var(--danger); }
+.parse-item-remove{
+  flex:none; background:none; border:none; color:var(--tx-faint); font-size:1.1rem; line-height:1;
+  cursor:pointer; padding:2px 4px;
+}
+.parse-item-remove:hover{ color:var(--danger); }
+
+/* ---- review-and-edit step (add-wizard, second confirmation screen) ---- */
+.review-item{
+  border:1px solid var(--border); border-radius:10px; background:var(--bg);
+  padding:14px; margin-bottom:12px;
+}
+.review-item-head{ display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.review-item-source{ font-family:var(--f-mono); font-size:0.6875rem; color:var(--tx-faint); }
+.review-item .field{ margin-bottom:10px; }
+.review-item .field:last-child{ margin-bottom:0; }
+.review-row{ display:flex; gap:10px; }
+.review-row .field{ flex:1; min-width:0; }
