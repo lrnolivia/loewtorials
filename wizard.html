@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>loewtorials</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bungee&family=Work+Sans:wght@500;600&family=JetBrains+Mono:wght@500;600&family=Space+Grotesk:wght@600;700;800&family=Space+Mono:wght@400;700&family=Fraunces:opsz,wght@9..144,600;9..144,900&family=IBM+Plex+Mono:wght@500;600&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Sora:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600&family=Space+Grotesk:wght@600;700;800&family=Space+Mono:wght@400;700&family=Fraunces:opsz,wght@9..144,600;9..144,900&family=Playfair+Display:wght@700;800;900&family=IBM+Plex+Mono:wght@500;600&family=Work+Sans:wght@500;600&family=Inter:wght@500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Lora:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/styles.css">
 <link rel="stylesheet" href="assets/wizard.css">
 <script src="assets/storage.js"></script>
 <script src="assets/theme.js"></script>
+<script src="assets/sync.js"></script>
 <script>
 // See index.html for why this runs this early — avoids a flash of
 // default theme/layout before assets/settings.js takes over.
@@ -27,14 +28,12 @@
 </head>
 <body>
 
+<div id="appHeaderMount"></div>
+
 <div class="rail-backdrop" id="railBackdrop"></div>
 
 <div class="app" id="wizardRoot">
   <aside class="rail" id="rail" aria-label="Wizard map">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-      <a class="rail-back" href="index.html" style="margin-bottom:0;">&larr; loewtorials</a>
-      <div id="railActions"></div>
-    </div>
     <p class="rail-title" id="railTitle">Wizard</p>
     <p class="rail-sub" id="railSub">Loading&hellip;</p>
     <button class="btn btn-primary btn-sm" id="markSolvedBtn" style="width:100%; justify-content:center; margin-bottom:18px; display:none;">&#10003; Mark solved / finished</button>
@@ -53,12 +52,20 @@
         <p class="eyebrow" data-w="phaseEyebrow">Phase</p>
         <h1 class="page-title" id="pageTitle">Loading wizard&hellip;</h1>
         <p class="page-sub" id="pageSub"></p>
+        <div class="view-toggle-row" id="viewToggleRow" style="display:none;">
+          <div class="view-toggle" id="viewToggle">
+            <button type="button" data-view="wizard">Guided</button>
+            <button type="button" data-view="article">Article</button>
+          </div>
+          <button type="button" class="view-default-btn" id="viewDefaultBtn"></button>
+        </div>
       </div>
       <div class="util-row">
         <button class="icon-btn" id="openNotesDesktop">Notes</button>
       </div>
     </div>
 
+    <div id="confidenceBanner"></div>
     <div class="step-card load-state" data-w="stepCard">Loading&hellip;</div>
 
     <div class="reset-row"><button id="resetBtn" style="display:none">restart this wizard</button></div>
@@ -77,10 +84,13 @@
 <script src="assets/settings.js"></script>
 <script src="assets/profile.js"></script>
 <script src="assets/completion.js"></script>
+<script src="assets/header.js"></script>
 <script src="assets/wizard-engine.js"></script>
 <script>
-(function () {
+(async function () {
+  await ensureSynced();
   bootAppearance();
+  applyTheme(Storage.getThemePrefs()); // re-apply in case hydration pulled in a different theme from another device
 
   const params = new URLSearchParams(location.search);
   const id = params.get('id');
@@ -93,8 +103,6 @@
     toast.className = 'toast show' + (isError ? ' error' : '');
     setTimeout(() => { toast.className = 'toast'; }, 2600);
   };
-
-  mountSettingsGearButton(document.getElementById('railActions'));
 
   function showError(msg) {
     stepCard.className = 'step-card load-state error';
@@ -120,29 +128,105 @@
       document.getElementById('railSub').textContent = wizard.subtitle || wizard.title;
       document.getElementById('pageTitle').textContent = wizard.title;
       document.getElementById('pageSub').textContent = wizard.description || '';
-      document.getElementById('resetBtn').style.display = '';
 
       const refIndex = Storage.buildRefIndex(manifestWizards);
       const root = document.getElementById('wizardRoot');
-      const engine = createWizardEngine(root, wizard, {
-        startAt: startStep,
-        currentWizardId: id,
-        resolveRef: filename => Storage.resolveRef(refIndex, filename),
-        loadWizard: wizardId => Storage.loadWizardData(wizardId, manifestWizards),
-        profile: Storage.getProfile()
-      });
-      engine.render();
+      const profile = Storage.getProfile();
 
-      document.getElementById('resetBtn').addEventListener('click', () => engine.resetAll());
+      // ---- which view: ?view= param (one-time) > saved per-wizard default > this wizard's own suggestion > 'wizard' ----
+      const queryView = params.get('view');
+      const savedDefault = (Storage.getOverrides()[id] || {}).defaultView || wizard.defaultView;
+      let mode = (queryView === 'article' || queryView === 'wizard') ? queryView : (savedDefault || wizard.suggestedView || 'wizard');
+      if (mode !== 'article' && mode !== 'wizard') mode = 'wizard';
+      const savedDefaultRef = { value: savedDefault };
 
+      const toggleRow = document.getElementById('viewToggleRow');
+      const toggleEl = document.getElementById('viewToggle');
+      const defaultBtn = document.getElementById('viewDefaultBtn');
+      const bannerEl = document.getElementById('confidenceBanner');
+      const resetBtn = document.getElementById('resetBtn');
       const solvedBtn = document.getElementById('markSolvedBtn');
+      toggleRow.style.display = '';
+
+      let engine;
+
+      function renderBanner() {
+        const showBanner = wizard.confidence === 'low' && mode === 'wizard';
+        if (!showBanner) { bannerEl.innerHTML = ''; return; }
+        const notes = (wizard.confidenceNotes || []).slice(0, 4);
+        bannerEl.innerHTML = `<div class="confidence-banner">
+          <span class="icon">&#9888;</span>
+          <div>
+            <h4>This wizard was auto-converted from a plain document</h4>
+            ${notes.length ? '<ul>' + notes.map(n => `<li>${escapeHtmlLocal(n)}</li>`).join('') + '</ul>' : '<p style="margin:4px 0 10px; font-size:0.8125rem; color:var(--tx-muted);">The step structure may not be quite right.</p>'}
+            <div class="actions">
+              <button type="button" class="btn btn-sm btn-primary" id="bannerSwitchBtn">Switch to Article view</button>
+            </div>
+          </div>
+        </div>`;
+        const btn = document.getElementById('bannerSwitchBtn');
+        if (btn) btn.addEventListener('click', () => setMode('article'));
+      }
+
+      function escapeHtmlLocal(str) { return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+      function updateToggleUi() {
+        toggleEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.getAttribute('data-view') === mode));
+        const isSavedAsThisMode = savedDefaultRef.value === mode;
+        defaultBtn.textContent = isSavedAsThisMode ? `\u2713 Default view for this wizard` : `Set "${mode === 'article' ? 'Article' : 'Guided'}" as default view`;
+        defaultBtn.disabled = isSavedAsThisMode;
+      }
+
+      function setMode(newMode) {
+        mode = newMode;
+        const url = new URL(location.href);
+        url.searchParams.set('view', mode);
+        history.replaceState(null, '', url);
+        renderBanner();
+        updateToggleUi();
+        mountEngine();
+      }
+
+      function mountEngine() {
+        resetBtn.style.display = mode === 'wizard' ? '' : 'none';
+        if (mode === 'article') {
+          engine = renderArticleView(root, wizard, { profile });
+          engine.render();
+        } else {
+          engine = createWizardEngine(root, wizard, {
+            startAt: startStep,
+            currentWizardId: id,
+            resolveRef: filename => Storage.resolveRef(refIndex, filename),
+            loadWizard: wizardId => Storage.loadWizardData(wizardId, manifestWizards),
+            profile
+          });
+          engine.render();
+        }
+      }
+
+      toggleEl.querySelectorAll('button').forEach(b => {
+        b.addEventListener('click', () => { if (b.getAttribute('data-view') !== mode) setMode(b.getAttribute('data-view')); });
+      });
+      defaultBtn.addEventListener('click', () => {
+        Storage.setOverride(id, { defaultView: mode });
+        savedDefaultRef.value = mode;
+        updateToggleUi();
+        showToast('Saved as the default view for this wizard.');
+      });
+
+      renderBanner();
+      updateToggleUi();
+      mountEngine();
+
+      resetBtn.addEventListener('click', () => { if (engine.resetAll) engine.resetAll(); });
+
       solvedBtn.style.display = '';
       solvedBtn.addEventListener('click', () => {
         initCompletionModal({
           id,
           title: wizard.title,
           steps: wizard.steps,
-          getHistory: () => engine.history.concat([engine.currentId]),
+          getHistory: () => engine.history ? engine.history.concat([engine.currentId]) : (engine.getHistory ? engine.getHistory() : []),
           getChecked: () => engine.getChecked()
         });
       });

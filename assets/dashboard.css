@@ -1,35 +1,7 @@
 .shell{ max-width: min(var(--shell-max-width), 96vw); margin:0 auto; padding: clamp(24px,4vw,56px) clamp(14px,2.5vw,28px) 80px; }
 
-/* system-specs card (masthead) — this is the "spec bar" from §4: same
-   surface as .wizard-card in brutal, but the loud a1-filled bar in
-   dopamine. Text pairing follows whichever surface is actually behind
-   it in each style (surft in brutal, a1t in dopamine), not a fixed
-   --tx-muted, since that would go unreadable the moment the background
-   turns into a solid accent. */
-.spec-card{
-  display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center;
-  background:var(--panel); border:var(--border-w) solid var(--border); border-radius:var(--radius);
-  padding:10px 16px; font-family:var(--f-mono); font-size:0.75rem; color:var(--tx-muted);
-  margin-top:10px;
-}
-.spec-card .spec-item{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
-.spec-card .spec-item .spec-ico{ font-size:0.9rem; }
-.spec-card .spec-item strong{ color:var(--tx); font-weight:600; }
-.spec-card .spec-edit{ margin-left:auto; }
-.spec-card.empty{ color:var(--tx-faint); font-style:italic; }
-
-[data-style="brutal"] .spec-card{
-  background:var(--surf); color:var(--surft-muted); border:3px solid var(--border); box-shadow:7px 7px 0 var(--border); border-radius:0;
-}
-[data-style="brutal"] .spec-card .spec-item strong{ color:var(--surft); }
-[data-style="dopamine"] .spec-card{
-  background:var(--a1); color:var(--a1t); border:none; box-shadow:none; border-radius:20px;
-}
-[data-style="dopamine"] .spec-card .spec-item strong{ color:var(--a1t); }
-[data-style="dopamine"] .spec-card.empty{ background:var(--panel); color:var(--tx-faint); }
-
 /* view tabs: Active / Solved / Archived */
-.view-tabs{ display:flex; gap:6px; margin-bottom:16px; }
+.view-tabs-row{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
 .view-tabs button{
   background:transparent; border:1px solid var(--border); color:var(--tx-muted);
   padding:7px 14px; border-radius:999px; cursor:pointer; font-family:var(--f-mono); font-size:0.75rem;
@@ -48,10 +20,6 @@
    text color happens to be "current" the way solved's self-contained
    a1/a1t fill can. */
 .status-badge.archived{ border:1px solid var(--border); color:var(--tx-faint); background:var(--panel); }
-
-.masthead{ display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap; margin-bottom: clamp(22px,3vw,34px); }
-.masthead h1{ font-family:var(--f-display); font-weight:700; font-size:clamp(1.625rem,4vw,2.375rem); margin:6px 0 0; letter-spacing:-0.01em; }
-.masthead .tagline{ color:var(--tx-muted); font-size:0.90625rem; margin:8px 0 0; max-width:52ch; }
 
 .toolbar{
   display:flex; gap:10px; flex-wrap:wrap; align-items:center;

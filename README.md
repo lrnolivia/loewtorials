@@ -1,15 +1,15 @@
-# loewtorials 
+# loewtorials
 
 A personal wizard dashboard. Card grid of interactive, step-by-step guides
 ("wizards"), organizable by category/date/tags, with a built-in Markdown
 format so you can write a new wizard by hand or hand a spec to Claude and
 upload what comes back.
 
-It's a fully static site — plain HTML/CSS/JS, no build step, no backend.
-That means Netlify (which you already planned to use) is a completely fine
-home for it: this isn't "a whole webapp" in the sense of needing servers,
-it's just more than one file. Netlify serves any number of static files for
-free with no extra setup.
+It's a static site (plain HTML/CSS/JS, no build step) served as a single
+Cloudflare Worker, with one API route for cross-device sync — see
+`CLOUDFLARE-SETUP.md` for the sync-specific setup. Cloudflare's free tier
+covers the Worker, static assets, and the KV storage it syncs to, with
+no extra cost.
 
 ## What's in here
 
@@ -118,30 +118,16 @@ npx serve .
 
 Then open `http://localhost:8080`.
 
-## Deploying to Netlify (free)
+## Deploying to Cloudflare Workers (free)
 
-No build command, no functions, nothing to configure.
+No build command required. Do the one-time KV namespace + password setup
+in `CLOUDFLARE-SETUP.md` first (it also covers auto-deploy on push, the
+Workers equivalent of what Pages' git integration used to do) — that
+single doc covers deploying and turning on cross-device sync together,
+since on Workers both come from the same `wrangler.toml`/`wrangler deploy`.
 
-1. **Drag-and-drop:** go to [app.netlify.com/drop](https://app.netlify.com/drop)
-   and drag the whole `loewtorials` folder in. You get a live
-   `random-name-123.netlify.app` URL immediately.
-2. **Git-connected (recommended for ongoing edits):** push this folder to a
-   GitHub/GitLab repo, then in Netlify choose "Add new site → Import an
-   existing project," pick the repo, leave the build command blank, and set
-   the publish directory to the repo root (or wherever `index.html` ends up).
-   Every push redeploys automatically — handy since you said you'll be
-   maintaining/expanding this from your phone, Mac, and PC.
-3. **Custom URL:** Netlify's free tier lets you rename the subdomain (Site
-   settings → Domain management → Options → Edit site name), e.g.
-   `loewtorials.netlify.app` — free and no card required. If you own a
-   domain already, you can also point it at Netlify for free (their side
-   costs nothing; you'd just be paying whatever you already pay for the
-   domain itself). If you don't own one and want something shorter than
-   `*.netlify.app`, free registrars for a `.is-a.dev` or similar
-   community-run subdomain are the other no-cost route — but `*.netlify.app`
-   with a custom site name already gets you a clean, memorable URL with zero
-   extra setup.
-
-Because it's a git-connected static site, editing on your Mac or PC and
-pushing is all it takes to update it everywhere — including on your phone,
-since it's just a URL.
+Once deployed, editing on your Mac or PC and pushing (or running
+`wrangler deploy`) is all it takes to update it everywhere — including on
+your phone, since it's just a URL. Custom domains and renaming the
+`*.workers.dev` subdomain are both free, under your Worker's **Settings →
+Domains & Routes**.

@@ -1,5 +1,7 @@
-(function () {
+(async function () {
+  await ensureSynced();
   bootAppearance();
+  applyTheme(Storage.getThemePrefs()); // re-apply in case hydration pulled in a different theme from another device
 
   let manifestWizards = [];
   let currentList = [];
@@ -18,10 +20,6 @@
     setTimeout(() => { toast.className = 'toast'; }, 2600);
   }
   window.showToast = showToast;
-
-  mountSettingsGearButton(document.getElementById('mastheadActions'));
-  window.refreshSpecCard = () => renderSpecCard(document.getElementById('specCard'));
-  window.refreshSpecCard();
 
   document.getElementById('downloadLogBtn').addEventListener('click', () => {
     Storage.downloadText('loewtorials-activity-log-' + new Date().toISOString().slice(0, 10) + '.md', generateActivityLogMd());
@@ -142,6 +140,8 @@
     <article class="wizard-card" data-id="${escapeHtml(w.id)}">
       <div class="card-top">
         <span class="badge">${escapeHtml(w.category || 'Uncategorized')}</span>
+        ${w.kind === 'article' ? '<span class="badge">Article</span>' : ''}
+        ${w.confidence === 'low' ? '<span class="badge badge-warn" title="Auto-converted with lower confidence — check Article view">Low confidence</span>' : ''}
         ${statusBadge}
         <button class="menu-btn" data-id="${escapeHtml(w.id)}" aria-label="Manage this wizard">&#8942;</button>
         <div class="card-menu" id="menu-${escapeHtml(w.id)}">
@@ -284,8 +284,9 @@
     const { wizard, errors } = parseWizardMarkdown(text);
     let html = '';
     if (wizard) {
+      const kindLabel = wizard.kind === 'article' ? 'Article (auto-converted from plain Markdown)' : 'Wizard';
       html += `<div class="preview-box"><strong>${escapeHtml(wizard.title)}</strong><br>
-        ${escapeHtml(wizard.category)} \u00b7 ${Object.keys(wizard.steps).length} steps \u00b7 id: ${escapeHtml(wizard.id)}</div>`;
+        ${kindLabel} \u00b7 ${escapeHtml(wizard.category)} \u00b7 ${Object.keys(wizard.steps).length} steps \u00b7 id: ${escapeHtml(wizard.id)}</div>`;
     }
     if (errors && errors.length) {
       html += `<div class="parse-errors"><strong>${wizard ? 'Heads up' : "Couldn't build this wizard"}:</strong><ul>${errors.map(e => `<li>${escapeHtml(e)}</li>`).join('')}</ul></div>`;
