@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>loewtorials</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bungee&family=Work+Sans:wght@500;600&family=JetBrains+Mono:wght@500;600&family=Space+Grotesk:wght@600;700;800&family=Space+Mono:wght@400;700&family=Fraunces:opsz,wght@9..144,600;9..144,900&family=IBM+Plex+Mono:wght@500;600&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/dashboard.css">
+<script src="assets/storage.js"></script>
+<script src="assets/theme.js"></script>
+<script>
+// Applied before the rest of the page paints, so appearance settings
+// (theme/fonts/layout/text-size) don't flash to default first. Full
+// logic lives in assets/settings.js, loaded later; this just repeats the
+// localStorage read + CSS var writes so it can run this early.
+(function(){
+  try{
+    bootTheme();
+    var raw = localStorage.getItem('loewtorials.settings.v1');
+    var s = raw ? JSON.parse(raw) : {};
+    if (s.layoutWidth) document.documentElement.style.setProperty('--shell-max-width', s.layoutWidth + 'px');
+    if (s.sidebarGap) document.documentElement.style.setProperty('--sidebar-gap', s.sidebarGap + 'px');
+    if (s.textScale) document.documentElement.style.setProperty('--text-scale', String(s.textScale));
+  }catch(e){}
+})();
+</script>
+</head>
+<body>
+
+<div class="shell">
+  <div class="masthead">
+    <div>
+      <p class="eyebrow">Wizard dashboard</p>
+      <h1>loewtorials</h1>
+      <p class="tagline">Interactive step-by-step guides for your own projects. Built to grow — add a new one any time from a Markdown file.</p>
+      <div class="spec-card empty" id="specCard">No system specs saved yet.</div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:flex-start;" id="mastheadActions">
+      <button class="btn btn-primary new-wizard-btn" id="newWizardBtn">+ New wizard</button>
+    </div>
+  </div>
+
+  <div class="view-tabs" id="viewTabs">
+    <button data-status="all" class="active">All <span class="count" id="countAll"></span></button>
+    <button data-status="active">Active <span class="count" id="countActive"></span></button>
+    <button data-status="solved">Solved <span class="count" id="countSolved"></span></button>
+    <button data-status="archived">Archived <span class="count" id="countArchived"></span></button>
+  </div>
+
+  <div class="toolbar">
+    <input type="search" id="searchInput" placeholder="Search wizards, tags, descriptions&hellip;">
+    <select id="categorySelect"><option value="">All categories</option></select>
+    <select id="sortSelect">
+      <option value="name">Sort: Name</option>
+      <option value="date-desc">Sort: Newest first</option>
+      <option value="date-asc">Sort: Oldest first</option>
+      <option value="category">Sort: Category</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" id="downloadLogBtn" title="Download the full activity log across all solved wizards">&darr; Activity log</button>
+  </div>
+
+  <div class="wizard-grid" id="wizardGrid"></div>
+
+  <p class="tag" id="hiddenLink" style="display:none; margin-top:20px; cursor:pointer; width:fit-content;"></p>
+</div>
+
+<!-- ---------------- Add-wizard modal ---------------- -->
+<div class="modal-backdrop hidden" id="addModal">
+  <div class="modal">
+    <button class="modal-close" id="addModalClose">&times;</button>
+    <h2>Add a new wizard</h2>
+    <p class="hint">Wizards live as plain Markdown files. Upload or paste one below, or get one written for you first.</p>
+
+    <div class="add-tabs">
+      <button class="active" data-pane="paneUpload">Upload / paste .md</button>
+      <button data-pane="paneGenerate">Get one written</button>
+    </div>
+
+    <div class="add-pane active" id="paneUpload">
+      <div class="dropzone" id="dropzone">
+        Drag a <strong>.md</strong> file here, or click to choose one.
+        <input type="file" id="mdFileInput" accept=".md,text/markdown,text/plain" style="display:none">
+      </div>
+      <div class="divider">or paste it</div>
+      <div class="field">
+        <textarea id="mdPasteArea" placeholder="Paste your wizard Markdown here&hellip;"></textarea>
+      </div>
+      <div id="parseResult"></div>
+      <div style="text-align:right; margin-top:16px;">
+        <button class="btn btn-primary" id="confirmAddBtn" style="display:none;">Add to dashboard</button>
+      </div>
+    </div>
+
+    <div class="add-pane" id="paneGenerate">
+      <p class="hint" style="margin-bottom:16px;">
+        Don't have a wizard file yet? Download the spec that tells Claude exactly how to write one in the right format, then hand it to a fresh Claude conversation along with what you want the wizard to walk through. When you get the .md back, come here and drop it in the other tab.
+      </p>
+      <div class="spec-actions">
+        <button class="btn btn-ghost" id="downloadSpecBtn">&darr; Download wizard-spec.md</button>
+        <button class="btn btn-ghost" id="copyPromptBtn">Copy starter prompt</button>
+      </div>
+      <div class="divider">open Claude</div>
+      <div class="spec-actions">
+        <button class="btn btn-choice" id="openDesktopBtn">Open in Claude Desktop app</button>
+        <a class="btn btn-ghost" href="https://claude.ai/new" target="_blank" rel="noopener">Open claude.ai in browser</a>
+      </div>
+      <p class="hint" style="margin-top:14px; margin-bottom:0;">
+        The desktop button uses Claude's <code>claude://</code> link and only works if the Claude Desktop app is installed on this device. On phone or in a browser, use "Open claude.ai," then attach the downloaded spec and paste the copied prompt yourself — Anthropic disabled prompt-prefilling on the plain web link for security reasons.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ---------------- Edit-details modal ---------------- -->
+<div class="modal-backdrop hidden" id="editModal">
+  <div class="modal">
+    <button class="modal-close" id="editModalClose">&times;</button>
+    <h2>Edit wizard details</h2>
+    <p class="hint">Organize how this wizard shows up on the dashboard. This doesn't change its steps.</p>
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="editTitleInput" placeholder="Wizard title">
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <input type="text" id="editCategory" placeholder="e.g. Storage &amp; Filesystems">
+    </div>
+    <div class="field">
+      <label>Tags (comma separated)</label>
+      <input type="text" id="editTags" placeholder="e.g. ntfs, dual-boot, linux">
+    </div>
+    <div class="field">
+      <label>Date</label>
+      <input type="date" id="editDate">
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:10px;">
+      <button class="btn btn-ghost" id="editCancel">Cancel</button>
+      <button class="btn btn-primary" id="editSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/md-parser.js"></script>
+<script src="assets/settings.js"></script>
+<script src="assets/profile.js"></script>
+<script src="assets/completion.js"></script>
+<script src="assets/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "wizards": [
+    { "id": "tour", "title": "Tour of loewtorials", "category": "Meta", "date": "2026-08-26", "tags": ["tour", "guide", "getting-started"], "file": "wizards/tour.json" }
+  ]
+}

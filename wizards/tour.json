@@ -1,0 +1,173 @@
+{
+  "id": "tour",
+  "title": "Tour of loewtorials",
+  "subtitle": "What this dashboard is and how to use it",
+  "description": "A short, interactive walkthrough of everything loewtorials can do — wizards, uploading your own, linking, mark-solved, and appearance settings.",
+  "category": "Meta",
+  "tags": [
+    "tour",
+    "guide",
+    "getting-started"
+  ],
+  "date": "2026-08-26",
+  "sourceFiles": [],
+  "relevantPackages": [],
+  "start": "welcome",
+  "outline": [
+    {
+      "type": "group",
+      "id": "basics",
+      "label": "What This Is",
+      "steps": [
+        "welcome",
+        "anatomy"
+      ]
+    },
+    {
+      "type": "group",
+      "id": "authoring",
+      "label": "How Wizards Are Built",
+      "steps": [
+        "steps-groups",
+        "branches-outcomes"
+      ]
+    },
+    {
+      "type": "branch",
+      "id": "try-a-branch",
+      "label": "Want to see how a decision point works?"
+    },
+    {
+      "type": "group",
+      "id": "linking",
+      "label": "Wizards Linking to Wizards",
+      "steps": [
+        "linking"
+      ]
+    },
+    {
+      "type": "group",
+      "id": "uploading",
+      "label": "Adding Your Own Wizards",
+      "steps": [
+        "uploading"
+      ]
+    },
+    {
+      "type": "group",
+      "id": "wrapping-up",
+      "label": "Tracking What You've Done",
+      "steps": [
+        "mark-solved",
+        "activity-log"
+      ]
+    },
+    {
+      "type": "group",
+      "id": "personalizing",
+      "label": "Making It Yours",
+      "steps": [
+        "appearance"
+      ]
+    },
+    {
+      "type": "outcomes",
+      "ids": [
+        "tour-done"
+      ]
+    }
+  ],
+  "steps": {
+    "welcome": {
+      "group": "basics",
+      "title": "Welcome to loewtorials",
+      "body": "<p>loewtorials is a personal dashboard of interactive, step-by-step guides called <strong>wizards</strong>. Each one walks you through a tutorial or troubleshooting flow one screen at a time, instead of dumping a wall of text on you.</p>\n<p>This tour is itself a wizard — everything you're clicking through right now works the same way any wizard you write or upload will work.</p>",
+      "checklist": [
+        "I'm looking at the wizard player right now (rail on the side, step in the middle)"
+      ],
+      "next": "anatomy"
+    },
+    "anatomy": {
+      "group": "basics",
+      "title": "The parts of a wizard",
+      "body": "<p>On the left is the <strong>rail</strong> — a map of every group, step, decision point, and outcome in this wizard, so you always know where you are and how much is left. On the right (or below, on mobile) is the <strong>stage</strong> — the current step's content.</p>",
+      "note": "Steps can contain body text, copyable code blocks, a checklist you tick off as you go, and callout notes like this one.",
+      "next": "steps-groups"
+    },
+    "steps-groups": {
+      "group": "authoring",
+      "title": "Groups and Steps",
+      "body": "<p>A wizard's markdown source is just a sequence of headings: <code>Group</code>, <code>Step</code>, <code>Branch</code>, and <code>Outcome</code>. Steps inside a <code>Group</code> heading get bundled together in the rail's sidebar so related steps show up as one visual cluster.</p>\n<p>Document order <strong>is</strong> the flow — a plain step automatically moves to whichever step comes right after it in the file. You don't wire up \"next\" by hand unless you're branching.</p>",
+      "next": "try-a-branch"
+    },
+    "try-a-branch": {
+      "type": "branch",
+      "group": "authoring",
+      "title": "Want to see how a decision point works?",
+      "body": "<p>A <strong>Branch</strong> is a step that asks a question and offers a few labeled choices instead of a single \"Next\" button — shown as a diamond in the rail. Try picking one below (either is fine, they both continue the tour).</p>",
+      "choices": [
+        {
+          "label": "Show me the branches/outcomes step",
+          "next": "branches-outcomes",
+          "banner": "Good choice — branches are how a wizard adapts to what actually happened during a run, not just a fixed script."
+        },
+        {
+          "label": "Skip ahead to outcomes",
+          "next": "branches-outcomes"
+        }
+      ]
+    },
+    "branches-outcomes": {
+      "group": "authoring",
+      "title": "Branches and Outcomes",
+      "body": "<p>Branches let a wizard fork based on what's actually true for the person running it — \"did that fix it?\", \"which error did you get?\" — instead of forcing everyone down one linear path.</p>\n<p>An <strong>Outcome</strong> is a terminal step — a place a wizard ends, styled as success, info, or warning. Every outcome in a wizard gets listed at the bottom of the rail automatically, so you can see all the possible endings at a glance even before you reach one.</p>",
+      "next": "linking"
+    },
+    "linking": {
+      "group": "linking",
+      "title": "The auto-linked-reference mechanic",
+      "body": "<p>If a step, checklist item, or note mentions another wizard's <code>.md</code> filename — like <code>some-other-wizard.md</code> — and some wizard on this dashboard actually claims that filename, the mention turns into a live card right in that step: the linked wizard's title, a button to walk it inline without leaving the page, and a link to open it full-page.</p>\n<p>activates when a real filename match exists on your dashboard.</p>\n<p>A wizard claims a filename either automatically (under whatever name you uploaded it as) or explicitly via a <code>sourceFiles:</code> frontmatter field, which can even point at one specific step instead of the wizard's start.</p>",
+      "checklist": [
+        "Nothing to check here — this step just explains the mechanic. It only"
+      ],
+      "refs": [
+        "some-other-wizard.md"
+      ],
+      "next": "uploading"
+    },
+    "uploading": {
+      "group": "uploading",
+      "title": "Custom wizard upload",
+      "body": "<p>Back on the dashboard, the <strong>\"+ New wizard\"</strong> button has two tabs. \"Upload / paste .md\" is for a wizard file you already have — drag it in, or paste its contents directly. \"Get one written\" downloads the authoring spec and a starter prompt meant for a fresh Claude conversation: describe what you want walked through, attach the spec, and Claude hands back a finished <code>.md</code> file ready to drop into the other tab.</p>",
+      "note": "Uploaded wizards live in this browser's local storage — per-device, since this is a static site with no server. Use a card's \"Export JSON\" action if you want to carry one to another device or make it a permanent built-in wizard.",
+      "next": "mark-solved"
+    },
+    "mark-solved": {
+      "group": "wrapping-up",
+      "title": "Mark solved / finished",
+      "body": "<p>Every wizard player has a <strong>\"Mark solved / finished\"</strong> button in the rail. It opens a review of the exact path you just took — which steps, which branch choices, which checklist items — and asks a quick tap-only question per step (defaulting to \"went as written,\" so confirming a clean run takes zero typing). Saving downloads a <code>.md</code> summary of that run, meant to be handed to a fresh AI chat as a trace of what's already been tried.</p>",
+      "checklist": [
+        "Try opening that button now, if you want to see the review screen"
+      ],
+      "next": "activity-log"
+    },
+    "activity-log": {
+      "group": "wrapping-up",
+      "title": "The activity log",
+      "body": "<p>The dashboard also has an <strong>activity log</strong> download, which rolls up every completion across every wizard on this device into one <code>.md</code> file — a running record of everything you've solved, when, and how it went.</p>",
+      "next": "appearance"
+    },
+    "appearance": {
+      "group": "personalizing",
+      "title": "Appearance settings",
+      "body": "<p>The gear icon (top of the rail, and on the dashboard) opens settings for theme, font, background, layout width, sidebar gap, and text scale — all applied live as you adjust them, and remembered on this device.</p>",
+      "next": "tour-done"
+    },
+    "tour-done": {
+      "type": "outcome",
+      "outcomeStyle": "success",
+      "title": "You've seen the whole dashboard",
+      "body": "<p>That's everything: wizards are just markdown, they can branch and link to each other, uploading is drag-and-drop, and every run you finish gets tracked without you having to type a report by hand. Head back to the dashboard and either open a real wizard or write your first one.</p>"
+    }
+  }
+}

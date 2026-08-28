@@ -1,0 +1,156 @@
+.shell{ max-width: min(var(--shell-max-width), 96vw); margin:0 auto; padding: clamp(24px,4vw,56px) clamp(14px,2.5vw,28px) 80px; }
+
+/* system-specs card (masthead) — this is the "spec bar" from §4: same
+   surface as .wizard-card in brutal, but the loud a1-filled bar in
+   dopamine. Text pairing follows whichever surface is actually behind
+   it in each style (surft in brutal, a1t in dopamine), not a fixed
+   --tx-muted, since that would go unreadable the moment the background
+   turns into a solid accent. */
+.spec-card{
+  display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center;
+  background:var(--panel); border:var(--border-w) solid var(--border); border-radius:var(--radius);
+  padding:10px 16px; font-family:var(--f-mono); font-size:0.75rem; color:var(--tx-muted);
+  margin-top:10px;
+}
+.spec-card .spec-item{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
+.spec-card .spec-item .spec-ico{ font-size:0.9rem; }
+.spec-card .spec-item strong{ color:var(--tx); font-weight:600; }
+.spec-card .spec-edit{ margin-left:auto; }
+.spec-card.empty{ color:var(--tx-faint); font-style:italic; }
+
+[data-style="brutal"] .spec-card{
+  background:var(--surf); color:var(--surft-muted); border:3px solid var(--border); box-shadow:7px 7px 0 var(--border); border-radius:0;
+}
+[data-style="brutal"] .spec-card .spec-item strong{ color:var(--surft); }
+[data-style="dopamine"] .spec-card{
+  background:var(--a1); color:var(--a1t); border:none; box-shadow:none; border-radius:20px;
+}
+[data-style="dopamine"] .spec-card .spec-item strong{ color:var(--a1t); }
+[data-style="dopamine"] .spec-card.empty{ background:var(--panel); color:var(--tx-faint); }
+
+/* view tabs: Active / Solved / Archived */
+.view-tabs{ display:flex; gap:6px; margin-bottom:16px; }
+.view-tabs button{
+  background:transparent; border:1px solid var(--border); color:var(--tx-muted);
+  padding:7px 14px; border-radius:999px; cursor:pointer; font-family:var(--f-mono); font-size:0.75rem;
+}
+.view-tabs button.active{ border-color:var(--a1); color:var(--a1); background:var(--a1-dim); }
+.view-tabs button .count{ color:var(--tx-faint); margin-left:4px; }
+
+.status-badge{
+  font-family:var(--f-mono); font-size:0.63rem; letter-spacing:0.04em; text-transform:uppercase;
+  padding:2px 8px; border-radius:999px; white-space:nowrap;
+}
+.status-badge.solved{ border:1px solid var(--a1); color:var(--a1t); background:var(--a1); }
+/* archived gets its own explicit panel/tx pairing (not transparent) —
+   it sits on .wizard-card, whose own background swaps between --surf
+   and --card depending on style, so it can't safely borrow whatever
+   text color happens to be "current" the way solved's self-contained
+   a1/a1t fill can. */
+.status-badge.archived{ border:1px solid var(--border); color:var(--tx-faint); background:var(--panel); }
+
+.masthead{ display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap; margin-bottom: clamp(22px,3vw,34px); }
+.masthead h1{ font-family:var(--f-display); font-weight:700; font-size:clamp(1.625rem,4vw,2.375rem); margin:6px 0 0; letter-spacing:-0.01em; }
+.masthead .tagline{ color:var(--tx-muted); font-size:0.90625rem; margin:8px 0 0; max-width:52ch; }
+
+.toolbar{
+  display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  background:var(--panel); border:var(--border-w) solid var(--border); border-radius:var(--radius);
+  padding:14px 16px; margin-bottom:26px;
+}
+.toolbar input[type=search]{
+  flex:1; min-width:180px; background:var(--bg); border:var(--border-w) solid var(--border); border-radius:var(--radius);
+  color:var(--tx); padding:9px 12px; font-size:0.84375rem;
+}
+.toolbar select{
+  background:var(--bg); border:var(--border-w) solid var(--border); border-radius:var(--radius); color:var(--tx);
+  padding:9px 10px; font-size:0.8125rem; font-family:var(--f-mono);
+}
+.toolbar input:focus, .toolbar select:focus{ border-color:var(--a1); }
+.toolbar .spacer{ flex:1; }
+
+.wizard-grid{
+  display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px;
+}
+
+/* .wizard-card is the "card" from §4. Its own text (title, sub, desc,
+   date) always follows whichever safe-text variable pairs with its
+   *current* background — --surft in brutal, --cardt in dopamine — never
+   a fixed --tx-muted, since the fill itself changes completely between
+   styles (quiet neutral surf vs a bold card color). */
+.wizard-card{
+  background:var(--panel); border:var(--border-w) solid var(--border); border-radius:var(--radius);
+  padding:20px; display:flex; flex-direction:column; gap:10px; position:relative;
+  transition: border-color .15s ease, transform .08s ease;
+}
+.wizard-card:hover{ border-color: var(--a1); }
+.wizard-card .card-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.wizard-card h3{ font-family:var(--f-display); font-size:1.0625rem; margin:2px 0 0; line-height:1.3; }
+.wizard-card .card-sub{ color:var(--tx-muted); font-size:0.8125rem; margin:0; }
+.wizard-card .card-desc{ color:var(--tx-muted); font-size:0.8125rem; margin:2px 0 0; line-height:1.5; flex:1; }
+.wizard-card .tag-row{ display:flex; gap:6px; flex-wrap:wrap; }
+.wizard-card .card-bottom{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px; }
+.wizard-card .card-date{ font-family:var(--f-mono); font-size:0.6875rem; color:var(--tx-faint); }
+
+[data-style="brutal"] .wizard-card{
+  background:var(--surf); color:var(--surft); border:3px solid var(--border); box-shadow:7px 7px 0 var(--border); border-radius:0;
+}
+[data-style="brutal"] .wizard-card .card-sub,
+[data-style="brutal"] .wizard-card .card-desc{ color:var(--surft-muted); }
+[data-style="brutal"] .wizard-card .card-date{ color:var(--surft-muted); }
+[data-style="dopamine"] .wizard-card{
+  background:var(--card); color:var(--cardt); border:none; box-shadow:none; border-radius:28px;
+}
+[data-style="dopamine"] .wizard-card .card-sub,
+[data-style="dopamine"] .wizard-card .card-desc,
+[data-style="dopamine"] .wizard-card .card-date{ color:var(--cardt); opacity:0.72; }
+
+.menu-btn{ background:none; border:none; color:var(--tx-faint); cursor:pointer; font-size:1.125rem; padding:2px 6px; border-radius:6px; line-height:1; }
+.menu-btn:hover{ color:var(--tx); background:var(--panel); }
+/* the dropdown menu is its own panel/tx-paired surface — deliberately
+   not --surf/--surft, so it reads correctly regardless of which style's
+   .wizard-card it's anchored to. */
+.card-menu{
+  position:absolute; top:44px; right:14px; background:var(--panel); border:var(--border-w) solid var(--border);
+  border-radius:var(--radius); padding:6px; display:none; flex-direction:column; min-width:170px; z-index:10;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+}
+.card-menu.open{ display:flex; }
+.card-menu button{
+  background:none; border:none; color:var(--tx-muted); text-align:left; padding:8px 10px; border-radius:6px;
+  cursor:pointer; font-size:0.8125rem; font-family:var(--f-body);
+}
+.card-menu button:hover{ background:var(--bg); color:var(--tx); }
+.card-menu button.danger:hover{ color:var(--danger); }
+
+.empty-state{
+  text-align:center; padding: 60px 20px; color:var(--tx-muted); border:1px dashed var(--border);
+  border-radius:var(--radius); font-size:0.875rem;
+}
+
+.new-wizard-btn{ margin-left:auto; }
+
+.add-tabs{ display:flex; gap:8px; margin-bottom:18px; }
+.add-tabs button{
+  flex:1; background:var(--bg); border:var(--border-w) solid var(--border); color:var(--tx-muted);
+  padding:9px; border-radius:var(--radius); cursor:pointer; font-family:var(--f-mono); font-size:0.75rem;
+}
+.add-tabs button.active{ border-color:var(--a1); color:var(--a1); }
+
+.add-pane{ display:none; }
+.add-pane.active{ display:block; }
+
+.spec-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+.spec-actions .btn{ flex:1; min-width:150px; justify-content:center; }
+
+.parse-errors{
+  border:1px dashed var(--danger); background: var(--danger-dim); color:var(--tx);
+  border-radius:8px; padding:10px 12px; font-size:0.78125rem; margin-top:10px; max-height:160px; overflow-y:auto;
+}
+.parse-errors ul{ margin:4px 0 0; padding-left:18px; }
+
+.preview-box{
+  border:1px solid var(--a1); background: var(--a1-dim); border-radius:8px;
+  padding:12px 14px; margin-top:10px; font-size:0.8125rem; color:var(--tx);
+}
+.preview-box strong{ color:var(--a1); }

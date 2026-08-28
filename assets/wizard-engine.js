@@ -1,0 +1,341 @@
+// wizard-engine.js
+// Renders a wizard data object (see wizards/*.json for the schema) into the
+// #app root using the rail/stage UI. Fully generic — no wizard-specific code
+// lives here. To add a wizard, add data, not code.
+
+function createWizardEngine(rootEl, wizard, opts) {
+  opts = opts || {};
+  const STEPS = wizard.steps;
+  const OUTLINE = wizard.outline || [];
+  const START = (opts.startAt && STEPS[opts.startAt]) ? opts.startAt : wizard.start;
+
+  let currentId = START;
+  let history = [];
+  let checked = {}; // stepId -> Set of indices
+  let banner = null;
+
+  function stepOrder() {
+    // Flatten outline groups (in order) for progress-bar math; branch/outcome
+    // markers included so percentage feels right even mid-branch.
+    const order = [];
+    OUTLINE.forEach(item => {
+      if (item.type === 'group') order.push(...item.steps);
+      else if (item.type === 'branch') order.push(item.id);
+    });
+    return order.length ? order : Object.keys(STEPS);
+  }
+
+  function goTo(id, stepOpts) {
+    stepOpts = stepOpts || {};
+    history.push(currentId);
+    currentId = id;
+    banner = stepOpts.banner || null;
+    render();
+    if (!opts.suppressScroll) rootEl.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    if (opts.onNavigate) opts.onNavigate(currentId, history);
+  }
+
+  function goBack() {
+    if (history.length === 0) return;
+    currentId = history.pop();
+    banner = null;
+    render();
+    if (opts.onNavigate) opts.onNavigate(currentId, history);
+  }
+
+  function resetAll() {
+    currentId = START;
+    history = [];
+    checked = {};
+    banner = null;
+    render();
+    if (opts.onNavigate) opts.onNavigate(currentId, history);
+  }
+
+  function toggleCheck(stepId, idx) {
+    checked[stepId] = checked[stepId] || new Set();
+    if (checked[stepId].has(idx)) checked[stepId].delete(idx);
+    else checked[stepId].add(idx);
+  }
+
+  function copyCode(text, btn) {
+    const done = () => { btn.textContent = 'copied'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1400); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(() => { btn.textContent = 'select & copy'; });
+    } else {
+      btn.textContent = 'select & copy';
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // Optional "detected on your system" badge. Purely informational, never
+  // blocks navigation. A step (or the whole wizard) can declare
+  // `relevantPackages: ['ntfs-3g', ...]`; if a system profile was passed in
+  // via opts.profile (see storage.js Storage.getProfile() / profile.js),
+  // each package is checked against the last-parsed Containerfile's
+  // installed-package list.
+  function matchBadgeHtml(relevantPackages) {
+    if (!relevantPackages || !relevantPackages.length || !opts.profile) return '';
+    const cf = opts.profile.containerfile;
+    if (!cf || !cf.parsed) return '';
+    const installed = new Set((cf.parsed.installedPackages || []).map(p => p.toLowerCase()));
+    const found = relevantPackages.filter(p => installed.has(String(p).toLowerCase()));
+    const missing = relevantPackages.filter(p => !installed.has(String(p).toLowerCase()));
+    let html = '<p class="match-badge-row">';
+    if (found.length) {
+      html += `<span class="match-badge found">&#10003; detected on your system (${found.map(escapeHtml).join(', ')})</span>`;
+    }
+    if (missing.length) {
+      html += `<span class="match-badge missing">&#9888; not found in your last Containerfile (${missing.map(escapeHtml).join(', ')})</span>`;
+    }
+    html += '</p>';
+    return html;
+  }
+
+  // ---------------- render: rail ----------------
+  function renderRail(railContentEl, mobileProgressEl) {
+    let html = '';
+
+    function tickState(id) {
+      if (id === currentId) return 'current';
+      if (history.includes(id)) return 'past';
+      return '';
+    }
+    function groupState(ticks) {
+      if (ticks.includes(currentId)) return 'active';
+      if (ticks.every(t => history.includes(t))) return 'done';
+      return '';
+    }
+
+    OUTLINE.forEach(item => {
+      if (item.type === 'group') {
+        html += `<div class="group ${groupState(item.steps)}">
+          <div class="group-head"><span class="node"></span><span class="label">${escapeHtml(item.label)}</span></div>
+          <div class="ticks">`;
+        item.steps.forEach(id => {
+          const s = STEPS[id];
+          if (!s) return;
+          html += `<div class="tick ${tickState(id)}"><span class="dot"></span>${escapeHtml(s.title)}</div>`;
+        });
+        html += `</div></div>`;
+      } else if (item.type === 'branch') {
+        const branchStep = STEPS[item.id];
+        const label = item.label || (branchStep ? branchStep.title : '');
+        const seen = currentId === item.id || history.includes(item.id);
+        const isCurrent = currentId === item.id;
+        const state = isCurrent ? 'active' : (seen ? 'done' : '');
+        html += `<div class="diamond-row ${state}"><span class="diamond"></span> ${escapeHtml(label)}</div>`;
+      } else if (item.type === 'outcomes') {
+        html += `<div class="outcomes">`;
+        item.ids.forEach(id => {
+          const s = STEPS[id];
+          if (!s) return;
+          const taken = currentId === id;
+          html += `<div class="outcome-node ${taken ? 'taken' : ''}">${escapeHtml((s.outcomeStyle === 'success' ? 'RESOLVED \u2014 ' : '').concat(s.title))}</div>`;
+        });
+        html += `</div>`;
+      }
+    });
+
+    railContentEl.innerHTML = html;
+
+    if (mobileProgressEl) {
+      const order = stepOrder();
+      const idx = order.indexOf(currentId);
+      const pct = idx >= 0 ? Math.round(((idx + 1) / order.length) * 100) : 0;
+      mobileProgressEl.style.width = pct + '%';
+    }
+  }
+
+  // ---------------- render: stage ----------------
+  function renderStage(cardEl, eyebrowEl) {
+    const s = STEPS[currentId];
+    if (!s) {
+      cardEl.innerHTML = `<p class="step-body">This wizard has no step called "${escapeHtml(currentId)}". Check the wizard data for a broken <code>next</code> reference.</p>`;
+      return;
+    }
+
+    let phaseLabel = (s.group && groupLabelFor(s.group)) || 'Step';
+    if (s.type === 'branch') phaseLabel += ' \u00b7 Decision point';
+    if (s.type === 'outcome') phaseLabel = 'Outcome';
+    if (eyebrowEl) eyebrowEl.textContent = phaseLabel;
+
+    cardEl.className = 'step-card' + (s.type === 'branch' ? ' branch' : '') + (s.type === 'outcome' ? ' outcome ' + (s.outcomeStyle || 'success') : '');
+
+    let html = '';
+    if (s.tick) html += `<p class="step-kicker">Step ${escapeHtml(s.tick)}</p>`;
+    if (banner) html += `<div class="note-callout">${banner}</div>`;
+    html += `<h2 class="step-title">${escapeHtml(s.title)}</h2>`;
+    html += matchBadgeHtml(s.relevantPackages || wizard.relevantPackages);
+    html += `<div class="step-body">${s.body || ''}</div>`;
+
+    if (s.code && s.code.length) {
+      s.code.forEach((c, i) => {
+        html += `<div class="code-wrap"><pre class="code" id="code-${currentId}-${i}">${escapeHtml(c)}</pre><button class="copy-btn" data-code="${currentId}-${i}">copy</button></div>`;
+      });
+    }
+    if (s.note) html += `<div class="note-callout">${s.note}</div>`;
+    if (s.checklist && s.checklist.length) {
+      html += `<ul class="checklist">`;
+      s.checklist.forEach((item, i) => {
+        const isChecked = checked[currentId] && checked[currentId].has(i);
+        html += `<li>
+          <input type="checkbox" id="chk-${currentId}-${i}" ${isChecked ? 'checked' : ''} data-step="${currentId}" data-idx="${i}">
+          <label for="chk-${currentId}-${i}" class="${isChecked ? 'done' : ''}">${escapeHtml(item)}</label>
+        </li>`;
+      });
+      html += `</ul>`;
+    }
+
+    // Auto-linked references to other wizards (e.g. a checklist item that
+    // said "work through fix-dirty-ntfs-partition.md"). Only rendered when
+    // a match is actually found — unmatched filenames stay plain text.
+    const depth = opts.depth || 0;
+    const canEmbed = depth < 2 && !!opts.loadWizard;
+    let matchedRefs = [];
+    if (s.refs && s.refs.length && opts.resolveRef) {
+      matchedRefs = s.refs
+        .map(f => opts.resolveRef(f))
+        .filter(match => match && match.id !== (opts.currentWizardId || wizard.id));
+    }
+    if (matchedRefs.length) {
+      html += `<div class="ref-links">`;
+      matchedRefs.forEach((match, i) => {
+        const href = 'wizard.html?id=' + encodeURIComponent(match.id) + (match.step ? '&step=' + encodeURIComponent(match.step) : '');
+        html += `<div class="ref-link-card">
+          <div class="ref-link-head">
+            <span class="ref-link-icon">&#128279;</span>
+            <div>
+              <div class="ref-link-label">Referenced wizard</div>
+              <div class="ref-link-title">${escapeHtml(match.title)}</div>
+            </div>
+          </div>
+          <div class="ref-link-actions">
+            ${canEmbed ? `<button type="button" class="btn btn-sm btn-ghost" data-embed-toggle="${i}">Show here</button>` : ''}
+            <a class="btn btn-sm btn-ghost" href="${href}">Open full page &rarr;</a>
+          </div>
+          <div class="ref-embed" data-embed-slot="${i}" style="display:none;"></div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `<div class="stage-nav">`;
+    html += `<button class="btn btn-back" id="wBack" ${history.length === 0 ? 'disabled style="visibility:hidden"' : ''}>\u2190 Back</button>`;
+    if (s.type === 'branch') {
+      html += `<div class="choice-row">`;
+      s.choices.forEach((c, i) => {
+        html += `<button class="btn btn-choice" data-choice="${i}">${escapeHtml(c.label)}</button>`;
+      });
+      html += `</div>`;
+    } else if (s.type === 'outcome' || !s.next) {
+      // terminal — no forward nav
+    } else {
+      html += `<button class="btn btn-primary" id="wNext">Next \u2192</button>`;
+    }
+    html += `</div>`;
+
+    cardEl.innerHTML = html;
+
+    const nextBtn = cardEl.querySelector('#wNext');
+    if (nextBtn) nextBtn.addEventListener('click', () => goTo(s.next));
+    const backBtn = cardEl.querySelector('#wBack');
+    if (backBtn) backBtn.addEventListener('click', goBack);
+    cardEl.querySelectorAll('[data-choice]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const c = s.choices[parseInt(btn.getAttribute('data-choice'), 10)];
+        goTo(c.next, { banner: c.banner });
+      });
+    });
+    cardEl.querySelectorAll('input[type=checkbox]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        toggleCheck(cb.getAttribute('data-step'), parseInt(cb.getAttribute('data-idx'), 10));
+        renderStage(cardEl, eyebrowEl);
+      });
+    });
+    cardEl.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-code');
+        const pre = cardEl.querySelector('#code-' + key);
+        copyCode(pre.textContent, btn);
+      });
+    });
+    cardEl.querySelectorAll('[data-embed-toggle]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = parseInt(btn.getAttribute('data-embed-toggle'), 10);
+        const slot = cardEl.querySelector('[data-embed-slot="' + i + '"]');
+        const match = matchedRefs[i];
+        if (!slot || !match) return;
+
+        if (slot.dataset.loaded === '1') {
+          const isOpen = slot.style.display !== 'none';
+          slot.style.display = isOpen ? 'none' : '';
+          btn.textContent = isOpen ? 'Show here' : 'Hide';
+          return;
+        }
+
+        slot.style.display = '';
+        slot.innerHTML = `<div class="ref-embed-loading">Loading&hellip;</div>`;
+        btn.textContent = 'Hide';
+        btn.disabled = true;
+
+        Promise.resolve(opts.loadWizard(match.id)).then(data => {
+          slot.innerHTML = `<div class="ref-embed-inner" data-w="stepCard"></div>`;
+          const nested = createWizardEngine(slot, data, {
+            startAt: match.step,
+            suppressScroll: true,
+            resolveRef: opts.resolveRef,
+            loadWizard: opts.loadWizard,
+            currentWizardId: match.id,
+            depth: depth + 1,
+            profile: opts.profile
+          });
+          nested.render();
+          slot.dataset.loaded = '1';
+          btn.disabled = false;
+        }).catch(err => {
+          slot.innerHTML = `<div class="ref-embed-error">Couldn't load this wizard: ${escapeHtml(err.message || 'unknown error')}</div>`;
+          btn.disabled = false;
+        });
+      });
+    });
+  }
+
+  function groupLabelFor(groupId) {
+    const g = OUTLINE.find(i => i.type === 'group' && i.id === groupId);
+    return g ? g.label : null;
+  }
+
+  function render() {
+    const railContentEl = rootEl.querySelector('[data-w="railContent"]');
+    const mobileProgressEl = rootEl.querySelector('[data-w="mobileProgress"]');
+    const cardEl = rootEl.querySelector('[data-w="stepCard"]');
+    const eyebrowEl = rootEl.querySelector('[data-w="phaseEyebrow"]');
+    if (railContentEl) renderRail(railContentEl, mobileProgressEl);
+    if (cardEl) renderStage(cardEl, eyebrowEl);
+  }
+
+  // Plain-object snapshot of which checklist items are ticked per step —
+  // {stepId: [idx, idx, ...]} — for anything that wants to read progress
+  // without reaching into engine internals (e.g. the mark-solved review).
+  function getChecked() {
+    const out = {};
+    Object.keys(checked).forEach(stepId => {
+      out[stepId] = Array.from(checked[stepId]).sort((a, b) => a - b);
+    });
+    return out;
+  }
+
+  return {
+    render,
+    resetAll,
+    goTo,
+    goBack,
+    getChecked,
+    get currentId() { return currentId; },
+    get history() { return history.slice(); }
+  };
+}

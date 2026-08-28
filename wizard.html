@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>loewtorials</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bungee&family=Work+Sans:wght@500;600&family=JetBrains+Mono:wght@500;600&family=Space+Grotesk:wght@600;700;800&family=Space+Mono:wght@400;700&family=Fraunces:opsz,wght@9..144,600;9..144,900&family=IBM+Plex+Mono:wght@500;600&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/wizard.css">
+<script src="assets/storage.js"></script>
+<script src="assets/theme.js"></script>
+<script>
+// See index.html for why this runs this early — avoids a flash of
+// default theme/layout before assets/settings.js takes over.
+(function(){
+  try{
+    bootTheme();
+    var raw = localStorage.getItem('loewtorials.settings.v1');
+    var s = raw ? JSON.parse(raw) : {};
+    if (s.layoutWidth) document.documentElement.style.setProperty('--shell-max-width', s.layoutWidth + 'px');
+    if (s.sidebarGap) document.documentElement.style.setProperty('--sidebar-gap', s.sidebarGap + 'px');
+    if (s.textScale) document.documentElement.style.setProperty('--text-scale', String(s.textScale));
+  }catch(e){}
+})();
+</script>
+</head>
+<body>
+
+<div class="rail-backdrop" id="railBackdrop"></div>
+
+<div class="app" id="wizardRoot">
+  <aside class="rail" id="rail" aria-label="Wizard map">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <a class="rail-back" href="index.html" style="margin-bottom:0;">&larr; loewtorials</a>
+      <div id="railActions"></div>
+    </div>
+    <p class="rail-title" id="railTitle">Wizard</p>
+    <p class="rail-sub" id="railSub">Loading&hellip;</p>
+    <button class="btn btn-primary btn-sm" id="markSolvedBtn" style="width:100%; justify-content:center; margin-bottom:18px; display:none;">&#10003; Mark solved / finished</button>
+    <div data-w="railContent"></div>
+  </aside>
+
+  <main class="stage">
+    <div class="mobile-bar">
+      <button class="map-btn" id="openRail">&#9776; Map</button>
+      <div class="progress"><span data-w="mobileProgress" style="width:0%"></span></div>
+      <button class="map-btn" id="openNotes">Log</button>
+    </div>
+
+    <div class="stage-top">
+      <div>
+        <p class="eyebrow" data-w="phaseEyebrow">Phase</p>
+        <h1 class="page-title" id="pageTitle">Loading wizard&hellip;</h1>
+        <p class="page-sub" id="pageSub"></p>
+      </div>
+      <div class="util-row">
+        <button class="icon-btn" id="openNotesDesktop">Notes</button>
+      </div>
+    </div>
+
+    <div class="step-card load-state" data-w="stepCard">Loading&hellip;</div>
+
+    <div class="reset-row"><button id="resetBtn" style="display:none">restart this wizard</button></div>
+  </main>
+</div>
+
+<div class="notes-drawer" id="notesDrawer" aria-label="Notes">
+  <h3>Notes</h3>
+  <p>Jot down anything worth remembering as you go. Nothing here is saved after you close the tab.</p>
+  <textarea id="notesArea" placeholder="Notes..."></textarea>
+  <button class="btn btn-back close-notes" id="closeNotes">Close</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/settings.js"></script>
+<script src="assets/profile.js"></script>
+<script src="assets/completion.js"></script>
+<script src="assets/wizard-engine.js"></script>
+<script>
+(function () {
+  bootAppearance();
+
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+  const startStep = params.get('step');
+  const stepCard = document.querySelector('[data-w="stepCard"]');
+
+  window.showToast = function (msg, isError) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = 'toast show' + (isError ? ' error' : '');
+    setTimeout(() => { toast.className = 'toast'; }, 2600);
+  };
+
+  mountSettingsGearButton(document.getElementById('railActions'));
+
+  function showError(msg) {
+    stepCard.className = 'step-card load-state error';
+    stepCard.textContent = msg;
+    document.getElementById('pageTitle').textContent = 'Wizard not found';
+    document.getElementById('pageSub').textContent = '';
+  }
+
+  if (!id) { showError('No wizard id given. Go back to the dashboard and pick a wizard.'); return; }
+
+  let manifestWizards = [];
+  fetch('wizards/manifest.json')
+    .then(r => r.json())
+    .then(manifest => {
+      manifestWizards = manifest.wizards || [];
+      return Storage.loadWizardData(id, manifestWizards);
+    })
+    .then(wizard => {
+      if (!wizard || !wizard.steps || !wizard.start) throw new Error('This wizard\'s data looks incomplete (missing steps or a start step).');
+
+      document.title = wizard.title + ' \u2014 loewtorials';
+      document.getElementById('railTitle').textContent = wizard.railLabel || 'Signal path';
+      document.getElementById('railSub').textContent = wizard.subtitle || wizard.title;
+      document.getElementById('pageTitle').textContent = wizard.title;
+      document.getElementById('pageSub').textContent = wizard.description || '';
+      document.getElementById('resetBtn').style.display = '';
+
+      const refIndex = Storage.buildRefIndex(manifestWizards);
+      const root = document.getElementById('wizardRoot');
+      const engine = createWizardEngine(root, wizard, {
+        startAt: startStep,
+        currentWizardId: id,
+        resolveRef: filename => Storage.resolveRef(refIndex, filename),
+        loadWizard: wizardId => Storage.loadWizardData(wizardId, manifestWizards),
+        profile: Storage.getProfile()
+      });
+      engine.render();
+
+      document.getElementById('resetBtn').addEventListener('click', () => engine.resetAll());
+
+      const solvedBtn = document.getElementById('markSolvedBtn');
+      solvedBtn.style.display = '';
+      solvedBtn.addEventListener('click', () => {
+        initCompletionModal({
+          id,
+          title: wizard.title,
+          steps: wizard.steps,
+          getHistory: () => engine.history.concat([engine.currentId]),
+          getChecked: () => engine.getChecked()
+        });
+      });
+      window.onCompletionSaved = () => { solvedBtn.textContent = '\u2713 Solved \u2014 mark again'; };
+    })
+    .catch(err => {
+      console.error(err);
+      showError(err.message || 'Could not load this wizard.');
+    });
+
+  // chrome: mobile rail + notes drawer
+  const rail = document.getElementById('rail');
+  const backdrop = document.getElementById('railBackdrop');
+  document.getElementById('openRail').addEventListener('click', () => { rail.classList.add('open'); backdrop.classList.add('open'); });
+  backdrop.addEventListener('click', () => { rail.classList.remove('open'); backdrop.classList.remove('open'); });
+
+  const notes = document.getElementById('notesDrawer');
+  document.getElementById('openNotes').addEventListener('click', () => notes.classList.add('open'));
+  document.getElementById('openNotesDesktop').addEventListener('click', () => notes.classList.add('open'));
+  document.getElementById('closeNotes').addEventListener('click', () => notes.classList.remove('open'));
+})();
+</script>
+</body>
+</html>
