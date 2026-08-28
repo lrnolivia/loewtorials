@@ -32,10 +32,18 @@
   --f-body:'Sora', sans-serif;
   --f-mono:'JetBrains Mono', ui-monospace, monospace;
 
-  /* -- derived (never written by JS, always computed from the above) -- */
-  --tx-muted: color-mix(in srgb, var(--tx) 68%, var(--bg));
-  --tx-faint: color-mix(in srgb, var(--tx) 42%, var(--bg));
-  --surft-muted: color-mix(in srgb, var(--surft) 68%, var(--surf));
+  /* -- derived (never written by JS, always computed from the above) --
+     Mix ratios bumped from the original 68%/42%/68% — at those weights
+     tx-faint measured as low as ~2.3:1 against bg (fails WCAG AA even
+     for large text) and, worse, surft-muted measured ~1.3:1 in the
+     neon-cobalt theme wherever it ended up on a --panel background
+     instead of --surf (e.g. the style/mode/corners toggle). Raising
+     the weights is a blanket legibility fix; components that read a
+     surf-paired token from a panel-colored container are also fixed
+     directly at the call site (see .switch-2 below). */
+  --tx-muted: color-mix(in srgb, var(--tx) 74%, var(--bg));
+  --tx-faint: color-mix(in srgb, var(--tx) 58%, var(--bg));
+  --surft-muted: color-mix(in srgb, var(--surft) 74%, var(--surf));
   --track: color-mix(in srgb, var(--tx) 24%, var(--bg));
   --grid-line: color-mix(in srgb, var(--tx) 6%, transparent);
   --a1-dim: color-mix(in srgb, var(--a1) 20%, transparent);
@@ -186,7 +194,17 @@ button, input, textarea, select{ font-family:inherit; }
 [data-style="brutal"] .btn-sm{ box-shadow:3px 3px 0 var(--border); }
 [data-style="dopamine"] .btn{ border:none; box-shadow:none; border-radius:var(--radius-btn); }
 [data-style="dopamine"] .btn-primary{ background:var(--a3); color:var(--a3t); }
-[data-style="dopamine"] .btn-ghost, [data-style="dopamine"] .btn-back{ background:var(--panel); color:var(--tx); }
+/* Ghost/back buttons used to fill with --panel — indistinguishable from
+   a modal, whose own background IS --panel, so every "secondary" button
+   inside a modal (Settings, Add wizard, etc.) rendered as bare text with
+   no visible button at all. --surf is deliberately a different tone from
+   --panel in every theme, but that difference is subtle-to-none on its
+   own in several families (cream/greige/mono all sit under 1.5:1), so a
+   real border does the actual work of making these read as buttons and
+   stay legible even packed tightly next to each other. */
+[data-style="dopamine"] .btn-ghost, [data-style="dopamine"] .btn-back{
+  background:var(--surf); color:var(--surft); border:1.5px solid var(--border);
+}
 
 .icon-btn{
   background:var(--surf); border:var(--border-w) solid var(--border); color:var(--surft);
@@ -243,6 +261,24 @@ button, input, textarea, select{ font-family:inherit; }
 }
 .field textarea{ min-height:160px; font-family:var(--f-mono); font-size:0.78125rem; resize:vertical; }
 .field input:focus, .field textarea:focus, .field select:focus{ border-color:var(--a1); }
+
+/* Shared by settings.js (Layout & data modal's Containerfile/Sync/Backup
+   rows) and profile.js (spec preview) — both load on the dashboard AND
+   the wizard page, so these live here rather than in dashboard.css. */
+.spec-actions{ display:flex; gap:12px; flex-wrap:wrap; }
+.spec-actions .btn{ flex:1; min-width:150px; justify-content:center; }
+
+.parse-errors{
+  border:1px dashed var(--danger); background: var(--danger-dim); color:var(--tx);
+  border-radius:8px; padding:10px 12px; font-size:0.78125rem; margin-top:10px; max-height:160px; overflow-y:auto;
+}
+.parse-errors ul{ margin:4px 0 0; padding-left:18px; }
+
+.preview-box{
+  border:1px solid var(--a1); background: var(--a1-dim); border-radius:8px;
+  padding:12px 14px; margin-top:10px; font-size:0.8125rem; color:var(--tx);
+}
+.preview-box strong{ color:var(--a1); }
 
 /* ---------- mark-solved review (assets/completion.js) ---------- */
 .review-import-row{
@@ -397,7 +433,7 @@ body.scrolled .mini-brand, body.scrolled .mini-specs{ display:flex; }
 .hsearch.open .hsearch-drop{ display:block; }
 .hsearch-item{ padding:8px 10px; border-radius:6px; font-size:0.78rem; cursor:pointer; color:var(--surft-muted); }
 .hsearch-item:hover, .hsearch-item.match{ background:var(--a3-dim); color:var(--surft); }
-.hsearch-empty{ padding:8px 10px; font-size:0.75rem; color:var(--tx-faint); }
+.hsearch-empty{ padding:8px 10px; font-size:0.75rem; color:var(--surft-muted); }
 
 .header-icon-btn{
   flex:none; width:38px; height:38px; border-radius:var(--radius-btn); border:var(--border-w) solid var(--border);
@@ -455,13 +491,18 @@ body.scrolled .specs-bar-wrap{ display:none; }
 
 /* generic 2-option switch: style (Neo/Dopamine), mode (Light/Dark),
    corners (Square/Rounded) all reuse this — a single pill, two labeled
-   halves, the active half filled. */
+   halves, the active half filled. Sits directly on --panel, so its
+   text must be a panel-paired token (--tx-*) — using a surf-paired one
+   here (as before) went nearly invisible in themes where surf and
+   panel are far apart in hue, like neon-cobalt. */
 .switch-2{ display:flex; background:var(--panel); border-radius:999px; padding:3px; gap:3px; }
 .switch-2 button{
   flex:1; background:none; border:none; border-radius:999px; padding:7px 10px; cursor:pointer;
-  font-family:var(--f-mono); font-size:0.7rem; color:var(--surft-muted);
+  font-family:var(--f-mono); font-size:0.7rem; color:var(--tx-muted);
 }
+.switch-2 button:hover{ color:var(--tx); }
 .switch-2 button.on{ background:var(--a1); color:var(--a1t); }
+.switch-2 button.on:hover{ color:var(--a1t); }
 
 /* circular theme swatches — one ring per palette, showing its own
    a1/a2/a3 as simple 45deg diagonal stripes behind a plain border,

@@ -116,20 +116,13 @@
 .add-pane{ display:none; }
 .add-pane.active{ display:block; }
 
-.spec-actions{ display:flex; gap:10px; flex-wrap:wrap; }
-.spec-actions .btn{ flex:1; min-width:150px; justify-content:center; }
-
-.parse-errors{
-  border:1px dashed var(--danger); background: var(--danger-dim); color:var(--tx);
-  border-radius:8px; padding:10px 12px; font-size:0.78125rem; margin-top:10px; max-height:160px; overflow-y:auto;
-}
-.parse-errors ul{ margin:4px 0 0; padding-left:18px; }
-
-.preview-box{
-  border:1px solid var(--a1); background: var(--a1-dim); border-radius:8px;
-  padding:12px 14px; margin-top:10px; font-size:0.8125rem; color:var(--tx);
-}
-.preview-box strong{ color:var(--a1); }
+/* .spec-actions, .preview-box and .parse-errors moved to styles.css —
+   settings.js (Layout & data modal's Containerfile/Sync/Backup button
+   rows) and profile.js (spec preview) both use these classes and both
+   run on wizard.html too, which never loaded dashboard.css. They were
+   rendering completely unstyled there — no flex layout, no gap, no
+   wrapping — which is what made those buttons look crammed together.
+   See styles.css for the current rules. */
 
 /* ---- multi-file parse checklist (add-wizard, upload pane) ---- */
 .parse-list{ display:flex; flex-direction:column; gap:10px; margin-top:12px; }
