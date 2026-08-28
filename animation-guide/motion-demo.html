@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>The Fade — Motion Guide Demo</title>
+<style>
+  /* ============================================================
+     MOTION TOKENS — Section 2 of the guide
+  ============================================================ */
+  :root{
+    --motion-instant: 100ms;
+    --motion-fast:    180ms;
+    --motion-base:    260ms;
+    --motion-medium:  380ms;
+    --motion-slow:    500ms;
+    --motion-hero:    650ms;
+
+    --ease-standard: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-soft:  cubic-bezier(0.7, 0, 0.84, 0);
+    --ease-snappy:   cubic-bezier(0.22, 1, 0.36, 1);
+
+    /* palette — warm, low-lit barbershop: charcoal + brushed copper */
+    --ink:        #0e0d0c;
+    --ink-2:      #16140f;
+    --paper:      #f3ece1;
+    --paper-dim:  #c9c0b2;
+    --copper:     #cf7c47;
+    --copper-hi:  #e79a63;
+    --moss:       #5c6b52;
+    --glass-fill: rgba(243,236,225,0.07);
+    --glass-edge: rgba(243,236,225,0.16);
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  /* iOS Safari will otherwise treat card content as a draggable object on
+     long-press-and-move, spawning a floating ghost preview of the element
+     that visibly detaches and skews as it follows the finger — that is
+     the native browser drag-and-drop affordance, not our scroll-snap.
+     Disabling it everywhere keeps the only draggable thing on the page
+     being the deliberate scroll containers themselves. */
+  *{
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  img{ -webkit-user-drag: none; }
+  body{
+    margin:0;
+    background: radial-gradient(ellipse at 20% -10%, #1c1712 0%, var(--ink) 55%);
+    font-family: system-ui, "Inter", sans-serif;
+    color: var(--paper);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding: 28px 12px;
+    overflow-x:hidden;
+  }
+  .display{
+    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    letter-spacing: 0.01em;
+  }
+
+  /* ============================================================
+     ANNOTATION CHIPS — small labels tagging which guide section
+     each region demonstrates. Not part of a real product; these
+     exist only so this file doubles as a living reference.
+  ============================================================ */
+  .tag{
+    position:absolute;
+    z-index:5;
+    font-size:10.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:5px 9px;
+    border-radius:100px;
+    background: rgba(14,13,12,0.55);
+    border:1px solid var(--glass-edge);
+    backdrop-filter: blur(8px);
+    color: var(--copper-hi);
+    pointer-events:none;
+    white-space:nowrap;
+  }
+
+  /* ============================================================
+     PHONE FRAME — just a viewport clamp so the scroll-snap feed
+     reads clearly. Not a technique itself.
+  ============================================================ */
+  .phone{
+    position:relative;
+    width: 393px;
+    max-width: 100%;
+    height: 852px;
+    max-height: 88vh;
+    border-radius: 46px;
+    border: 10px solid #050505;
+    box-shadow:
+      0 40px 80px rgba(0,0,0,0.55),
+      0 0 0 1px rgba(255,255,255,0.04) inset;
+    overflow: hidden;
+    background: var(--ink);
+  }
+
+  /* ============================================================
+     SECTION 5 — AMBIENT MOTION: drifting gradient blobs behind
+     everything. Cheap (transform-only), never paused unless
+     off-screen or reduced-motion.
+  ============================================================ */
+  .ambient-field{
+    position:absolute; inset:0; z-index:0; overflow:hidden;
+  }
+  .blob{
+    position:absolute;
+    width: 340px; height:340px;
+    border-radius:50%;
+    filter: blur(60px);
+    opacity:0.55;
+    will-change: transform;
+  }
+  .blob--copper{
+    background: radial-gradient(circle, var(--copper) 0%, transparent 70%);
+    top: -80px; left: -60px;
+    animation: driftA 16s ease-in-out infinite;
+  }
+  .blob--moss{
+    background: radial-gradient(circle, var(--moss) 0%, transparent 70%);
+    bottom: -100px; right: -80px;
+    animation: driftB 21s ease-in-out infinite;
+  }
+  @keyframes driftA{
+    0%,100%{ transform: translate(0,0) scale(1); }
+    50%{ transform: translate(40px, 60px) scale(1.15); }
+  }
+  @keyframes driftB{
+    0%,100%{ transform: translate(0,0) scale(1); }
+    50%{ transform: translate(-30px,-50px) scale(1.1); }
+  }
+
+  /* ============================================================
+     GLASS NAV — SECTION 6: Glass surface. Backdrop blur +
+     inset highlight + border, animates its own material props.
+  ============================================================ */
+  .glass{
+    background: var(--glass-fill);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    border: 1px solid var(--glass-edge);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.18),
+      0 8px 30px rgba(0,0,0,0.28);
+    transition: backdrop-filter var(--motion-base) var(--ease-standard);
+  }
+  .navbar{
+    position:absolute;
+    top:14px; left:14px; right:14px;
+    z-index:10;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 16px;
+    border-radius: 100px;
+  }
+  .navbar .mark{
+    display:flex; align-items:center; gap:8px;
+    font-size:14px; font-weight:600; letter-spacing:0.03em;
+  }
+  .mark-dot{
+    width:8px; height:8px; border-radius:50%;
+    background: var(--copper-hi);
+    animation: breathe 4.5s ease-in-out infinite; /* ambient micro-breathing, Section 5.1 */
+  }
+  @keyframes breathe{
+    0%,100%{ transform:scale(1); opacity:0.85; }
+    50%{ transform:scale(1.5); opacity:1; }
+  }
+  .navbar .pill{
+    font-size:11px; padding:6px 12px; border-radius:100px;
+    background: rgba(207,124,71,0.18); color: var(--copper-hi);
+    border: 1px solid rgba(207,124,71,0.35);
+  }
+
+  /* ============================================================
+     SECTION 4 — VERTICAL SCROLL-SNAP FEED
+     scroll-snap-type + align:center + stop:always, per the guide.
+  ============================================================ */
+  .feed{
+    position:relative;
+    z-index:1;
+    height:100%;
+    overflow-y:auto;
+    overflow-x:hidden;          /* prevents the browser's implicit overflow-x:auto
+                                    fallback (spec forces the "visible" axis to
+                                    "auto" when the other axis is scrollable) —
+                                    without this, wide inline content like the
+                                    tag labels made the whole feed free-draggable
+                                    sideways instead of only snapping vertically */
+    overscroll-behavior: contain;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    scrollbar-width:none;
+  }
+  .feed::-webkit-scrollbar{ display:none; }
+
+  .slide{
+    height:100%;
+    width:100%;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    padding: 90px 22px 40px;
+    flex-shrink:0;
+  }
+
+  /* --- Hero slide --- */
+  .slide--hero .eyebrow{
+    font-size:11px; letter-spacing:0.22em; text-transform:uppercase;
+    color: var(--copper-hi); margin-bottom:14px;
+  }
+  .slide--hero h1{
+    font-size:44px; line-height:1.02; margin:0 0 16px;
+    text-align:center;
+  }
+  .slide--hero p{
+    color: var(--paper-dim); text-align:center; max-width:280px;
+    font-size:14.5px; line-height:1.5; margin:0 0 30px;
+  }
+  .scroll-cue{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    color: var(--paper-dim); font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase;
+    animation: cueFloat 2.6s ease-in-out infinite; /* ambient idle motion, Section 5.4 */
+  }
+  @keyframes cueFloat{
+    0%,100%{ transform:translateY(0); opacity:0.6; }
+    50%{ transform:translateY(6px); opacity:1; }
+  }
+  .scroll-cue svg{ width:14px; height:14px; }
+
+  /* --- Look cards (tap → detail, Section 3.3 / 6) --- */
+  /* Outer element owns ONLY the scroll-snap focus scale.
+     Press feedback lives on an inner wrapper (.look-card-surface) so the
+     two effects never fight over the same `transform` property — that
+     collision was what caused the sideways "jump" on touch. */
+  .look-card{
+    width:100%;
+    max-width:320px;
+    aspect-ratio: 3/4;
+    border-radius: 28px;
+    position:relative;
+    cursor:pointer;
+    transform-origin:center center;
+    /* Section 4.2 — focus/defocus treatment tied to scroll-snap state */
+    transition:
+      transform var(--motion-base) var(--ease-standard),
+      opacity var(--motion-base) var(--ease-standard),
+      filter var(--motion-base) var(--ease-standard);
+    transform: scale(0.92);
+    opacity:0.55;
+    filter: saturate(0.75) brightness(0.85);
+  }
+  .look-card.is-focused{
+    transform: scale(1);
+    opacity:1;
+    filter: saturate(1) brightness(1);
+  }
+  .look-card-surface{
+    position:absolute; inset:0;
+    border-radius:inherit;
+    overflow:hidden;
+    transform-origin:center center;
+    /* this is the ONLY element press feedback ever touches */
+  }
+  .look-card .art{
+    position:absolute; inset:0;
+  }
+  .look-card--1 .art{ background: linear-gradient(155deg, #3a2c1d 0%, #7a4423 45%, #cf7c47 100%); }
+  .look-card--2 .art{ background: linear-gradient(155deg, #1f2a1c 0%, #3d4a33 45%, #5c6b52 100%); }
+  .look-card .art::after{
+    content:"";
+    position:absolute; inset:0;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.18), transparent 55%);
+  }
+  .look-card .grain{
+    position:absolute; inset:0; opacity:0.12; mix-blend-mode:overlay;
+    background-image: repeating-radial-gradient(circle at 0 0, rgba(255,255,255,0.6) 0, transparent 1.2px);
+    background-size: 3px 3px;
+  }
+  .look-card .caption{
+    position:absolute; left:0; right:0; bottom:0;
+    padding: 22px 20px 20px;
+    background: linear-gradient(to top, rgba(0,0,0,0.65), transparent);
+  }
+  .look-card .caption .k{ font-size:10px; letter-spacing:0.16em; text-transform:uppercase; color: var(--copper-hi); }
+  .look-card .caption h3{ margin:4px 0 0; font-size:22px; }
+  .look-card .tap-hint{
+    position:absolute; top:16px; right:16px;
+    width:30px; height:30px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.25);
+    font-size:14px;
+  }
+
+  /* pointer/press feedback — Section 3.2, CSS-approximated spring */
+  .pressable{
+    -webkit-tap-highlight-color: transparent;
+    transform-origin:center center;
+    transition: transform var(--motion-fast) var(--ease-snappy);
+  }
+  .pressable.is-pressed{
+    transform: scale(0.965);
+    transition: transform 90ms var(--ease-standard);
+  }
+  .pressable.is-releasing{
+    animation: pop-settle 380ms var(--ease-snappy) both;
+  }
+  /* while a horizontal/vertical drag is in progress, press feedback is
+     suppressed entirely (see JS) — this class exists just so a card never
+     gets caught mid-scale when the finger is actually scrolling past it */
+  @keyframes pop-settle{
+    0%   { transform: scale(0.965); }
+    55%  { transform: scale(1.025); }
+    80%  { transform: scale(0.994); }
+    100% { transform: scale(1); }
+  }
+
+  /* --- Rail slide (horizontal scroll-snap, Section 4.1) --- */
+  .slide--rail{ justify-content:flex-start; padding-top:110px; }
+  .slide--rail .heading{ width:100%; margin-bottom:16px; }
+  .slide--rail .heading .k{ font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase; color:var(--copper-hi); }
+  .slide--rail .heading h2{ margin:6px 0 0; font-size:24px; }
+
+  .rail{
+    display:flex;
+    gap:14px;
+    width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;          /* same implicit-auto fix as .feed, applied to
+                                    the perpendicular axis */
+    scroll-snap-type: x mandatory;
+    scroll-snap-stop: always;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;  /* pan-x alone blocked vertical swipes that
+                                    started on top of the rail from ever
+                                    reaching the vertical feed underneath —
+                                    this is what made it feel "stuck" once
+                                    scrolled to the barbers section */
+    padding: 6px 0 14px;
+    scrollbar-width:none;
+  }
+  .rail::-webkit-scrollbar{ display:none; }
+
+  .barber{
+    scroll-snap-align:center;
+    flex: 0 0 auto;
+    width:150px;
+    border-radius:20px;
+    padding:16px 14px;
+    /* entrance stagger target, Section 3.1 */
+    opacity:0;
+    transform: translateY(16px) scale(0.96);
+  }
+  .barber.in-view{
+    animation: rise-in var(--motion-medium) var(--ease-out-soft) both;
+    animation-delay: var(--d, 0ms);
+  }
+  @keyframes rise-in{
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  .barber .avatar{
+    width:100%; aspect-ratio:1;
+    border-radius:14px;
+    margin-bottom:10px;
+    background: linear-gradient(155deg, var(--bg1,#3a2c1d), var(--bg2,#cf7c47));
+    position:relative; overflow:hidden;
+  }
+  .barber .avatar::after{
+    content:"";
+    position:absolute; inset:0;
+    background: radial-gradient(circle at 35% 25%, rgba(255,255,255,0.25), transparent 55%);
+  }
+  .barber .name{ font-size:14.5px; font-weight:600; margin:0; }
+  .barber .role{ font-size:11.5px; color:var(--paper-dim); margin:2px 0 0; }
+  .barber .rating{
+    margin-top:8px; font-size:11px; color:var(--copper-hi);
+    display:flex; align-items:center; gap:4px;
+  }
+
+  .edge-fades{
+    position:relative;
+  }
+
+  /* --- Closing slide: liquid-glass CTA + staggered service list --- */
+  .slide--closing h2{ font-size:26px; margin:0 0 6px; text-align:center; }
+  .slide--closing p.sub{ color:var(--paper-dim); font-size:13.5px; text-align:center; margin:0 0 26px; }
+
+  .services{
+    width:100%; max-width:300px;
+    display:flex; flex-direction:column; gap:10px;
+    margin-bottom:28px;
+  }
+  .service-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:13px 16px;
+    border-radius:16px;
+    background: rgba(243,236,225,0.045);
+    border:1px solid rgba(243,236,225,0.08);
+    opacity:0; transform: translateX(-10px);
+  }
+  .service-row.in-view{
+    animation: slide-in var(--motion-base) var(--ease-out-soft) both;
+    animation-delay: var(--d, 0ms);
+  }
+  @keyframes slide-in{ to{ opacity:1; transform:translateX(0); } }
+  .service-row .name{ font-size:14px; }
+  .service-row .price{ font-size:13px; color:var(--copper-hi); font-variant-numeric:tabular-nums; }
+
+  .cta{
+    padding: 16px 40px;
+    border-radius:100px;
+    border:1px solid rgba(207,124,71,0.5);
+    background: linear-gradient(155deg, rgba(207,124,71,0.35), rgba(207,124,71,0.12));
+    color: var(--paper);
+    font-size:15px; font-weight:600; letter-spacing:0.01em;
+    display:flex; align-items:center; gap:8px;
+    box-shadow: 0 10px 30px rgba(207,124,71,0.18), inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  .cta:active{ transform:scale(0.96); }
+
+  /* ============================================================
+     SECTION 3.3 — CARD → DETAIL FLIP TRANSITION
+  ============================================================ */
+  .detail-overlay{
+    position:fixed;
+    z-index:100;
+    border-radius:28px;
+    overflow:hidden;
+    pointer-events:none;
+  }
+  .detail-scrim{
+    position:fixed; inset:0; z-index:90;
+    background: rgba(6,5,4,0.6);
+    backdrop-filter: blur(6px);
+    opacity:0;
+    transition: opacity var(--motion-medium) var(--ease-standard);
+    pointer-events:none;
+  }
+  .detail-scrim.show{ opacity:1; pointer-events:auto; }
+
+  .detail-content{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    padding:26px 22px 28px;
+    opacity:0;
+    transition: opacity var(--motion-fast) var(--ease-standard);
+  }
+  .detail-content.show{ opacity:1; }
+  .detail-content .k{ font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase; color:var(--copper-hi); }
+  .detail-content h2{ font-size:28px; margin:6px 0 10px; }
+  .detail-content p{ font-size:13.5px; line-height:1.55; color:var(--paper-dim); max-width:88%; margin:0 0 20px;}
+  .detail-content .meta-row{ display:flex; gap:10px; margin-bottom:22px; }
+  .detail-content .meta-chip{
+    font-size:11px; padding:6px 12px; border-radius:100px;
+    background: rgba(243,236,225,0.08); border:1px solid rgba(243,236,225,0.14);
+  }
+  .close-btn{
+    position:absolute; top:18px; right:18px;
+    width:34px; height:34px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(0,0,0,0.4);
+    border:1px solid rgba(255,255,255,0.2);
+    color:var(--paper); font-size:16px;
+    cursor:pointer;
+  }
+
+  /* dim the rest of the feed while a detail view is open — Section 3.3 */
+  .feed.dimmed .slide:not(.detail-source){
+    transition: transform var(--motion-medium) var(--ease-standard), filter var(--motion-medium) var(--ease-standard);
+    transform: scale(0.97);
+    filter: brightness(0.7) saturate(0.8);
+  }
+
+  /* ============================================================
+     ACCESSIBILITY — Section 7, non-negotiable
+  ============================================================ */
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  .side-note{
+    position:fixed;
+    left:50%; transform:translateX(-50%);
+    bottom:10px;
+    font-size:11px;
+    color: var(--paper-dim);
+    text-align:center;
+    max-width:393px;
+    z-index:1;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+
+  <div class="ambient-field" aria-hidden="true">
+    <div class="blob blob--copper"></div>
+    <div class="blob blob--moss"></div>
+  </div>
+
+  <div class="navbar glass">
+    <div class="mark"><span class="mark-dot"></span> The Fade</div>
+    <div class="pill">Tallahassee</div>
+  </div>
+  <div class="tag" style="top:64px; left:14px;">Ambient drift + breathing dot — §5</div>
+
+  <div class="feed" id="feed">
+
+    <!-- HERO SLIDE -->
+    <section class="slide slide--hero">
+      <div class="eyebrow">Men's grooming, refined</div>
+      <h1 class="display">Cut with<br/>intention.</h1>
+      <p>Scroll to explore looks and barbers. Every card here demonstrates a
+        technique from the motion guide — watch how it snaps, settles, and breathes.</p>
+      <div class="scroll-cue">
+        <span>Scroll</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      </div>
+    </section>
+
+    <!-- LOOK CARD 1 -->
+    <section class="slide" id="slide-look-1">
+      <div class="tag" style="top:64px; left:22px;">Scroll-snap focus scaling — §4.2</div>
+      <div class="look-card look-card--1" data-title="The Skin Fade" data-kicker="Signature look" data-desc="A precision taper that fades to bare skin at the temple, paired with a sculpted beard line. Built for definition that holds its shape between visits." data-time="45 min" data-price="$48">
+        <div class="look-card-surface pressable">
+          <div class="art"></div>
+          <div class="grain"></div>
+          <div class="tap-hint">↗</div>
+          <div class="caption">
+            <div class="k">Signature look</div>
+            <h3 class="display">The Skin Fade</h3>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOOK CARD 2 -->
+    <section class="slide" id="slide-look-2">
+      <div class="look-card look-card--2" data-title="Textured Crop" data-kicker="Low maintenance" data-desc="Short on the sides, natural texture on top. Styles in under a minute with just a palm of product — the everyday cut that still photographs well." data-time="35 min" data-price="$38">
+        <div class="look-card-surface pressable">
+          <div class="art"></div>
+          <div class="grain"></div>
+          <div class="tap-hint">↗</div>
+          <div class="caption">
+            <div class="k">Low maintenance</div>
+            <h3 class="display">Textured Crop</h3>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HORIZONTAL RAIL -->
+    <section class="slide slide--rail">
+      <div class="tag" style="top:64px; left:22px;">Horizontal scroll-snap + spring press — §4.1 / §3.2</div>
+      <div class="heading">
+        <div class="k">Book with</div>
+        <h2 class="display">Our barbers</h2>
+      </div>
+      <div class="rail" id="rail">
+        <div class="barber pressable" style="--bg1:#3a2c1d; --bg2:#cf7c47;"><div class="avatar"></div><p class="name">Marcus</p><p class="role">Fades &amp; tapers</p><div class="rating">★ 4.9 · 312 cuts</div></div>
+        <div class="barber pressable" style="--bg1:#1f2a1c; --bg2:#5c6b52;"><div class="avatar"></div><p class="name">Devon</p><p class="role">Beard sculpting</p><div class="rating">★ 5.0 · 208 cuts</div></div>
+        <div class="barber pressable" style="--bg1:#2a1f1c; --bg2:#a85c3a;"><div class="avatar"></div><p class="name">Ray</p><p class="role">Classic scissor</p><div class="rating">★ 4.8 · 401 cuts</div></div>
+        <div class="barber pressable" style="--bg1:#26241c; --bg2:#8a7a4a;"><div class="avatar"></div><p class="name">Theo</p><p class="role">Hot towel shaves</p><div class="rating">★ 4.9 · 156 cuts</div></div>
+      </div>
+    </section>
+
+    <!-- CLOSING -->
+    <section class="slide slide--closing">
+      <div class="tag" style="top:64px; left:22px;">Staggered entrance + liquid-glass CTA — §3.1 / §6</div>
+      <h2 class="display">Ready when<br/>you are</h2>
+      <p class="sub">Walk-ins welcome. Chairs open most days.</p>
+      <div class="services" id="services">
+        <div class="service-row"><span class="name">Haircut</span><span class="price">$38</span></div>
+        <div class="service-row"><span class="name">Beard trim</span><span class="price">$18</span></div>
+        <div class="service-row"><span class="name">Hot towel shave</span><span class="price">$32</span></div>
+        <div class="service-row"><span class="name">Line-up</span><span class="price">$15</span></div>
+      </div>
+      <button class="cta glass pressable">Book a chair →</button>
+    </section>
+
+  </div>
+
+  <!-- FLIP detail elements -->
+  <div class="detail-scrim" id="scrim"></div>
+  <div class="detail-overlay" id="detailOverlay">
+    <div class="art" id="detailArt" style="position:absolute; inset:0;"></div>
+    <div class="grain" style="position:absolute; inset:0; opacity:0.12; mix-blend-mode:overlay; background-image: repeating-radial-gradient(circle at 0 0, rgba(255,255,255,0.6) 0, transparent 1.2px); background-size: 3px 3px;"></div>
+    <button class="close-btn" id="closeBtn">✕</button>
+    <div class="detail-content" id="detailContent">
+      <div class="k" id="dKicker"></div>
+      <h2 class="display" id="dTitle"></h2>
+      <p id="dDesc"></p>
+      <div class="meta-row">
+        <div class="meta-chip" id="dTime"></div>
+        <div class="meta-chip" id="dPrice"></div>
+      </div>
+      <button class="cta glass pressable" style="align-self:flex-start;">Book this look →</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="side-note">Live demo · full write-up in <em>motion-guide-for-claude.md</em></div>
+
+<script>
+(function(){
+  const feed = document.getElementById('feed');
+  const phone = document.getElementById('phone');
+
+  /* ----------------------------------------------------------
+     §4.2 — Scroll-snap focus scaling for the two look cards.
+     Track which slide has the highest intersection ratio and
+     toggle .is-focused on the card inside it.
+  ---------------------------------------------------------- */
+  const lookCards = document.querySelectorAll('.look-card');
+  const focusObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      const card = entry.target.querySelector('.look-card');
+      if(!card) return;
+      if(entry.intersectionRatio > 0.6){
+        card.classList.add('is-focused');
+      } else {
+        card.classList.remove('is-focused');
+      }
+    });
+  }, { root: feed, threshold: [0, 0.6, 0.9] });
+
+  document.querySelectorAll('#slide-look-1, #slide-look-2').forEach(s=>focusObserver.observe(s));
+
+  /* ----------------------------------------------------------
+     §3.1 — Entrance stagger for rail items + service rows,
+     triggered once via IntersectionObserver, capped delay.
+  ---------------------------------------------------------- */
+  function staggerIn(selector, step){
+    const items = document.querySelectorAll(selector);
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          const idx = Array.from(items).indexOf(entry.target);
+          entry.target.style.setProperty('--d', (idx*step)+'ms');
+          entry.target.classList.add('in-view');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { root: feed, threshold: 0.3 });
+    items.forEach(i=>io.observe(i));
+  }
+  staggerIn('.barber', 60);
+  staggerIn('.service-row', 55);
+
+  /* ----------------------------------------------------------
+     §3.2 — Press / release spring feedback for any .pressable
+
+     A tap and the start of a scroll gesture look identical for the
+     first few pixels, so every pressable tracks pointer movement and
+     bails out of the press effect the moment it looks like a drag
+     (past ~8px) rather than scaling immediately on pointerdown. That
+     prevents the card from visibly popping while the user is actually
+     mid-swipe through the horizontal rail or the vertical feed —
+     which is what read as "moving side to side" on touch.
+  ---------------------------------------------------------- */
+  const DRAG_THRESHOLD = 8;
+
+  document.querySelectorAll('.pressable').forEach(el=>{
+    let startX = 0, startY = 0, isDragging = false, armed = false;
+
+    const onMove = (e)=>{
+      if(!armed) return;
+      const dx = Math.abs(e.clientX - startX);
+      const dy = Math.abs(e.clientY - startY);
+      if(!isDragging && (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD)){
+        isDragging = true;
+        el.classList.remove('is-pressed', 'is-releasing');
+      }
+    };
+    const onUp = ()=>{
+      armed = false;
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onUp);
+      if(isDragging){
+        // it was a scroll, not a tap — settle with no bounce, no click
+        el.classList.remove('is-pressed');
+        isDragging = false;
+        el.dataset.suppressClick = '1';
+        setTimeout(()=> delete el.dataset.suppressClick, 50);
+        return;
+      }
+      el.classList.remove('is-pressed');
+      el.classList.add('is-releasing');
+      setTimeout(()=>el.classList.remove('is-releasing'), 400);
+    };
+
+    el.addEventListener('pointerdown', (e)=>{
+      startX = e.clientX; startY = e.clientY;
+      isDragging = false; armed = true;
+      el.classList.remove('is-releasing');
+      el.classList.add('is-pressed');
+      document.addEventListener('pointermove', onMove);
+      document.addEventListener('pointerup', onUp);
+      document.addEventListener('pointercancel', onUp);
+    });
+  });
+
+  /* ----------------------------------------------------------
+     §3.3 — Card → detail FLIP transition
+  ---------------------------------------------------------- */
+  const overlay = document.getElementById('detailOverlay');
+  const scrim = document.getElementById('scrim');
+  const content = document.getElementById('detailContent');
+  const detailArt = document.getElementById('detailArt');
+  let sourceCard = null;
+
+  function openDetail(card){
+    sourceCard = card;
+    const rect = card.getBoundingClientRect();
+    const phoneRect = phone.getBoundingClientRect();
+
+    // Position overlay exactly over the source card first (the "First" in FLIP)
+    overlay.style.top = rect.top + 'px';
+    overlay.style.left = rect.left + 'px';
+    overlay.style.width = rect.width + 'px';
+    overlay.style.height = rect.height + 'px';
+    overlay.style.pointerEvents = 'auto';
+    detailArt.className = card.querySelector('.art').className;
+    detailArt.style.cssText = 'position:absolute; inset:0;' + getComputedStyle(card.querySelector('.art')).background ? '' : '';
+    detailArt.style.background = getComputedStyle(card.querySelector('.art')).backgroundImage;
+
+    // populate detail copy
+    document.getElementById('dKicker').textContent = card.dataset.kicker;
+    document.getElementById('dTitle').textContent = card.dataset.title;
+    document.getElementById('dDesc').textContent = card.dataset.desc;
+    document.getElementById('dTime').textContent = card.dataset.time;
+    document.getElementById('dPrice').textContent = card.dataset.price;
+
+    scrim.classList.add('show');
+    feed.classList.add('dimmed');
+    card.closest('.slide').classList.add('detail-source');
+    card.style.visibility = 'hidden';
+
+    // Force layout, then animate to the "Last" state (fills the phone frame)
+    overlay.getBoundingClientRect();
+    requestAnimationFrame(()=>{
+      overlay.style.transition = `top var(--motion-medium) var(--ease-standard),
+                                   left var(--motion-medium) var(--ease-standard),
+                                   width var(--motion-medium) var(--ease-standard),
+                                   height var(--motion-medium) var(--ease-standard),
+                                   border-radius var(--motion-medium) var(--ease-standard)`;
+      overlay.style.top = phoneRect.top + 'px';
+      overlay.style.left = phoneRect.left + 'px';
+      overlay.style.width = phoneRect.width + 'px';
+      overlay.style.height = phoneRect.height + 'px';
+      overlay.style.borderRadius = '36px';
+      setTimeout(()=> content.classList.add('show'), 180);
+    });
+  }
+
+  function closeDetail(){
+    if(!sourceCard) return;
+    const rect = sourceCard.getBoundingClientRect();
+    content.classList.remove('show');
+    overlay.style.top = rect.top + 'px';
+    overlay.style.left = rect.left + 'px';
+    overlay.style.width = rect.width + 'px';
+    overlay.style.height = rect.height + 'px';
+    overlay.style.borderRadius = '28px';
+    scrim.classList.remove('show');
+    feed.classList.remove('dimmed');
+
+    setTimeout(()=>{
+      overlay.style.pointerEvents = 'none';
+      sourceCard.style.visibility = 'visible';
+      sourceCard.closest('.slide').classList.remove('detail-source');
+      sourceCard = null;
+    }, 380);
+  }
+
+  lookCards.forEach(card=>{
+    card.addEventListener('click', ()=>{
+      const surface = card.querySelector('.pressable');
+      if(surface && surface.dataset.suppressClick) return; // was a scroll, not a tap
+      openDetail(card);
+    });
+  });
+  document.getElementById('closeBtn').addEventListener('click', closeDetail);
+  scrim.addEventListener('click', closeDetail);
+
+  /* pause ambient blobs when phone not visible (perf hygiene, §7) */
+  const blobs = document.querySelectorAll('.blob');
+  document.addEventListener('visibilitychange', ()=>{
+    blobs.forEach(b=> b.style.animationPlayState = document.hidden ? 'paused' : 'running');
+  });
+})();
+</script>
+
+</body>
+</html>
