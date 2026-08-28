@@ -3,6 +3,42 @@
 // #app root using the rail/stage UI. Fully generic — no wizard-specific code
 // lives here. To add a wizard, add data, not code.
 
+function escapeHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function copyCode(text, btn) {
+  const done = () => { btn.textContent = 'copied'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1400); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => { btn.textContent = 'select & copy'; });
+  } else {
+    btn.textContent = 'select & copy';
+  }
+}
+
+// Optional "detected on your system" badge. Purely informational, never
+// blocks navigation. A step (or the whole wizard) can declare
+// `relevantPackages: ['ntfs-3g', ...]`; if a system profile was passed in,
+// each package is checked against the last-parsed Containerfile's
+// installed-package list.
+function matchBadgeHtml(relevantPackages, profile) {
+  if (!relevantPackages || !relevantPackages.length || !profile) return '';
+  const cf = profile.containerfile;
+  if (!cf || !cf.parsed) return '';
+  const installed = new Set((cf.parsed.installedPackages || []).map(p => p.toLowerCase()));
+  const found = relevantPackages.filter(p => installed.has(String(p).toLowerCase()));
+  const missing = relevantPackages.filter(p => !installed.has(String(p).toLowerCase()));
+  let html = '<p class="match-badge-row">';
+  if (found.length) {
+    html += `<span class="match-badge found">&#10003; detected on your system (${found.map(escapeHtml).join(', ')})</span>`;
+  }
+  if (missing.length) {
+    html += `<span class="match-badge missing">&#9888; not found in your last Containerfile (${missing.map(escapeHtml).join(', ')})</span>`;
+  }
+  html += '</p>';
+  return html;
+}
+
 function createWizardEngine(rootEl, wizard, opts) {
   opts = opts || {};
   const STEPS = wizard.steps;
@@ -31,7 +67,24 @@ function createWizardEngine(rootEl, wizard, opts) {
     currentId = id;
     banner = stepOpts.banner || null;
     render();
-    if (!opts.suppressScroll) rootEl.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    // Scroll .stage-top (phase eyebrow + step title) into view, not just
+    // the step card — the card sits below stage-top in the DOM, so
+    // aligning the card's own top edge to the viewport top (the previous
+    // approach) pushed the eyebrow/title/view-toggle up and off-screen
+    // above it on any step tall enough to need scrolling, leaving you on
+    // an unlabeled wall of content with no sense of which step you were
+    // on. Scrolling the full rootEl instead (an even earlier approach)
+    // yanked the sidebar along with it and fought the sidebar's own
+    // sticky positioning. .stage-top is the middle ground: it's the
+    // first thing in the content column, above the card, so scrolling
+    // it to 'start' brings both the title and the card into view
+    // together without touching the sidebar. .stage-top also carries
+    // scroll-margin-top (see wizard.css) so the sticky utility bar
+    // doesn't cover it once it gets there.
+    if (!opts.suppressScroll) {
+      const scrollTarget = rootEl.querySelector('.stage-top') || rootEl.querySelector('[data-w="stepCard"]') || rootEl;
+      if (scrollTarget.scrollIntoView) scrollTarget.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
     if (opts.onNavigate) opts.onNavigate(currentId, history);
   }
 
@@ -56,43 +109,6 @@ function createWizardEngine(rootEl, wizard, opts) {
     checked[stepId] = checked[stepId] || new Set();
     if (checked[stepId].has(idx)) checked[stepId].delete(idx);
     else checked[stepId].add(idx);
-  }
-
-  function copyCode(text, btn) {
-    const done = () => { btn.textContent = 'copied'; btn.classList.add('copied'); setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 1400); };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done).catch(() => { btn.textContent = 'select & copy'; });
-    } else {
-      btn.textContent = 'select & copy';
-    }
-  }
-
-  function escapeHtml(str) {
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-
-  // Optional "detected on your system" badge. Purely informational, never
-  // blocks navigation. A step (or the whole wizard) can declare
-  // `relevantPackages: ['ntfs-3g', ...]`; if a system profile was passed in
-  // via opts.profile (see storage.js Storage.getProfile() / profile.js),
-  // each package is checked against the last-parsed Containerfile's
-  // installed-package list.
-  function matchBadgeHtml(relevantPackages) {
-    if (!relevantPackages || !relevantPackages.length || !opts.profile) return '';
-    const cf = opts.profile.containerfile;
-    if (!cf || !cf.parsed) return '';
-    const installed = new Set((cf.parsed.installedPackages || []).map(p => p.toLowerCase()));
-    const found = relevantPackages.filter(p => installed.has(String(p).toLowerCase()));
-    const missing = relevantPackages.filter(p => !installed.has(String(p).toLowerCase()));
-    let html = '<p class="match-badge-row">';
-    if (found.length) {
-      html += `<span class="match-badge found">&#10003; detected on your system (${found.map(escapeHtml).join(', ')})</span>`;
-    }
-    if (missing.length) {
-      html += `<span class="match-badge missing">&#9888; not found in your last Containerfile (${missing.map(escapeHtml).join(', ')})</span>`;
-    }
-    html += '</p>';
-    return html;
   }
 
   // ---------------- render: rail ----------------
@@ -169,7 +185,7 @@ function createWizardEngine(rootEl, wizard, opts) {
     if (s.tick) html += `<p class="step-kicker">Step ${escapeHtml(s.tick)}</p>`;
     if (banner) html += `<div class="note-callout">${banner}</div>`;
     html += `<h2 class="step-title">${escapeHtml(s.title)}</h2>`;
-    html += matchBadgeHtml(s.relevantPackages || wizard.relevantPackages);
+    html += matchBadgeHtml(s.relevantPackages || wizard.relevantPackages, opts.profile);
     html += `<div class="step-body">${s.body || ''}</div>`;
 
     if (s.code && s.code.length) {
@@ -337,5 +353,148 @@ function createWizardEngine(rootEl, wizard, opts) {
     getChecked,
     get currentId() { return currentId; },
     get history() { return history.slice(); }
+  };
+}
+
+// ---------------------------------------------------------------------
+// Article view: renders every step in a wizard's outline as one long,
+// scrollable read-through — same data, no navigation state. Branches are
+// shown as a labeled list of options (each a same-page anchor link to its
+// target section) rather than followed, since there's no single "path"
+// being played through; outcomes render inline instead of as an ending.
+// Checklists and code-copy still work. Used both for auto-converted
+// articles and as the always-available alternate view for any wizard.
+// ---------------------------------------------------------------------
+function renderArticleView(rootEl, wizard, opts) {
+  opts = opts || {};
+  const STEPS = wizard.steps;
+  const OUTLINE = wizard.outline || [];
+  let checked = {};
+
+  function stepBlockHtml(id, s) {
+    let html = `<section class="article-step" id="step-${escapeHtml(id)}">`;
+    const isBranch = s.type === 'branch';
+    const isOutcome = s.type === 'outcome';
+    if (isBranch) html += `<p class="step-kicker">Decision point</p>`;
+    else if (isOutcome) html += `<p class="step-kicker">Outcome${s.outcomeStyle ? ' \u00b7 ' + escapeHtml(s.outcomeStyle) : ''}</p>`;
+    html += `<h2 class="step-title">${escapeHtml(s.title)}</h2>`;
+    html += matchBadgeHtml(s.relevantPackages || wizard.relevantPackages, opts.profile);
+    if (s.body) html += `<div class="step-body">${s.body}</div>`;
+
+    if (isBranch) {
+      html += `<ul class="article-choices">`;
+      (s.choices || []).forEach(c => {
+        html += `<li><a href="#step-${escapeHtml(c.next)}">${escapeHtml(c.label)}</a>${c.banner ? ' <span class="choice-banner">' + escapeHtml(c.banner) + '</span>' : ''}</li>`;
+      });
+      html += `</ul>`;
+    }
+    if (s.code && s.code.length) {
+      s.code.forEach((c, i) => {
+        html += `<div class="code-wrap"><pre class="code" id="acode-${id}-${i}">${escapeHtml(c)}</pre><button class="copy-btn" data-code="${id}-${i}">copy</button></div>`;
+      });
+    }
+    if (s.note) html += `<div class="note-callout">${s.note}</div>`;
+    if (s.checklist && s.checklist.length) {
+      html += `<ul class="checklist">`;
+      s.checklist.forEach((item, i) => {
+        const isChecked = checked[id] && checked[id].has(i);
+        html += `<li>
+          <input type="checkbox" id="achk-${id}-${i}" ${isChecked ? 'checked' : ''} data-step="${id}" data-idx="${i}">
+          <label for="achk-${id}-${i}" class="${isChecked ? 'done' : ''}">${escapeHtml(item)}</label>
+        </li>`;
+      });
+      html += `</ul>`;
+    }
+    html += `</section>`;
+    return html;
+  }
+
+  function wireInteractions(cardEl) {
+    cardEl.querySelectorAll('input[type=checkbox]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const stepId = cb.getAttribute('data-step');
+        const idx = parseInt(cb.getAttribute('data-idx'), 10);
+        checked[stepId] = checked[stepId] || new Set();
+        if (checked[stepId].has(idx)) checked[stepId].delete(idx); else checked[stepId].add(idx);
+        const label = cb.nextElementSibling;
+        if (label) label.classList.toggle('done', checked[stepId].has(idx));
+      });
+    });
+    cardEl.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pre = cardEl.querySelector('#acode-' + btn.getAttribute('data-code'));
+        if (pre) copyCode(pre.textContent, btn);
+      });
+    });
+  }
+
+  function allStepIds() {
+    const ids = [];
+    OUTLINE.forEach(item => {
+      if (item.type === 'group') ids.push(...item.steps);
+      else if (item.type === 'branch') ids.push(item.id);
+      else if (item.type === 'outcomes') ids.push(...item.ids);
+    });
+    return ids;
+  }
+
+  function render() {
+    const cardEl = rootEl.querySelector('[data-w="stepCard"]');
+    const railContentEl = rootEl.querySelector('[data-w="railContent"]');
+    const eyebrowEl = rootEl.querySelector('[data-w="phaseEyebrow"]');
+    if (eyebrowEl) eyebrowEl.textContent = 'Article \u00b7 full read-through';
+
+    let html = '';
+    OUTLINE.forEach(item => {
+      if (item.type === 'group') {
+        html += `<h3 class="article-group-label">${escapeHtml(item.label)}</h3>`;
+        item.steps.forEach(id => { if (STEPS[id]) html += stepBlockHtml(id, STEPS[id]); });
+      } else if (item.type === 'branch') {
+        if (STEPS[item.id]) html += stepBlockHtml(item.id, STEPS[item.id]);
+      } else if (item.type === 'outcomes') {
+        item.ids.forEach(id => { if (STEPS[id]) html += stepBlockHtml(id, STEPS[id]); });
+      }
+    });
+
+    if (cardEl) {
+      cardEl.className = 'step-card article-card';
+      cardEl.innerHTML = html || '<p class="step-body">Nothing to show.</p>';
+      wireInteractions(cardEl);
+    }
+
+    if (railContentEl) {
+      let railHtml = '';
+      OUTLINE.forEach(item => {
+        if (item.type === 'group') {
+          railHtml += `<div class="group"><div class="group-head"><span class="node"></span><span class="label">${escapeHtml(item.label)}</span></div><div class="ticks">`;
+          item.steps.forEach(id => {
+            const s = STEPS[id];
+            if (s) railHtml += `<a class="tick" href="#step-${escapeHtml(id)}"><span class="dot"></span>${escapeHtml(s.title)}</a>`;
+          });
+          railHtml += `</div></div>`;
+        } else if (item.type === 'branch') {
+          const s = STEPS[item.id];
+          railHtml += `<a class="diamond-row" href="#step-${escapeHtml(item.id)}"><span class="diamond"></span> ${escapeHtml(item.label || (s && s.title) || '')}</a>`;
+        } else if (item.type === 'outcomes') {
+          railHtml += `<div class="outcomes">`;
+          item.ids.forEach(id => {
+            const s = STEPS[id];
+            if (s) railHtml += `<a class="outcome-node" href="#step-${escapeHtml(id)}">${escapeHtml(s.title)}</a>`;
+          });
+          railHtml += `</div>`;
+        }
+      });
+      railContentEl.innerHTML = railHtml;
+    }
+  }
+
+  return {
+    render,
+    getChecked() {
+      const out = {};
+      Object.keys(checked).forEach(id => { out[id] = Array.from(checked[id]).sort((a, b) => a - b); });
+      return out;
+    },
+    getHistory() { return allStepIds(); }
   };
 }

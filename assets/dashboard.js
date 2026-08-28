@@ -1,5 +1,7 @@
-(function () {
+(async function () {
+  await ensureSynced();
   bootAppearance();
+  applyTheme(Storage.getThemePrefs()); // re-apply in case hydration pulled in a different theme from another device
 
   let manifestWizards = [];
   let currentList = [];
@@ -11,6 +13,16 @@
   const categorySelect = document.getElementById('categorySelect');
   const sortSelect = document.getElementById('sortSelect');
   const toast = document.getElementById('toast');
+  const categoryNav = document.getElementById('categoryNav');
+
+  // mobile sidebar toggle (mirrors the wizard page's rail/backdrop wiring)
+  const rail = document.getElementById('rail');
+  const railBackdrop = document.getElementById('railBackdrop');
+  const openRailBtn = document.getElementById('openRail');
+  if (openRailBtn && rail && railBackdrop) {
+    openRailBtn.addEventListener('click', () => { rail.classList.add('open'); railBackdrop.classList.add('open'); });
+    railBackdrop.addEventListener('click', () => { rail.classList.remove('open'); railBackdrop.classList.remove('open'); });
+  }
 
   function showToast(msg, isError) {
     toast.textContent = msg;
@@ -18,10 +30,6 @@
     setTimeout(() => { toast.className = 'toast'; }, 2600);
   }
   window.showToast = showToast;
-
-  mountSettingsGearButton(document.getElementById('mastheadActions'));
-  window.refreshSpecCard = () => renderSpecCard(document.getElementById('specCard'));
-  window.refreshSpecCard();
 
   document.getElementById('downloadLogBtn').addEventListener('click', () => {
     Storage.downloadText('loewtorials-activity-log-' + new Date().toISOString().slice(0, 10) + '.md', generateActivityLogMd());
@@ -80,6 +88,24 @@
     categorySelect.innerHTML = '<option value="">All categories</option>' +
       cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
     if (cats.includes(current)) categorySelect.value = current;
+    renderCategoryNav(cats, current);
+  }
+
+  // Sidebar shortcut list for categories — clicking one sets the same
+  // filter as the toolbar's category <select>, just reachable from the
+  // nav without scrolling to the toolbar.
+  function renderCategoryNav(cats, current) {
+    if (!categoryNav) return;
+    categoryNav.innerHTML = cats.map(c =>
+      `<button type="button" data-category="${escapeHtml(c)}" class="${c === current ? 'active' : ''}">${escapeHtml(c)}</button>`
+    ).join('');
+    categoryNav.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cat = btn.getAttribute('data-category');
+        categorySelect.value = categorySelect.value === cat ? '' : cat;
+        refresh();
+      });
+    });
   }
 
   function applyFiltersAndSort(all) {
@@ -142,6 +168,8 @@
     <article class="wizard-card" data-id="${escapeHtml(w.id)}">
       <div class="card-top">
         <span class="badge">${escapeHtml(w.category || 'Uncategorized')}</span>
+        ${w.kind === 'article' ? '<span class="badge">Article</span>' : ''}
+        ${w.confidence === 'low' ? '<span class="badge badge-warn" title="Auto-converted with lower confidence — check Article view">Low confidence</span>' : ''}
         ${statusBadge}
         <button class="menu-btn" data-id="${escapeHtml(w.id)}" aria-label="Manage this wizard">&#8942;</button>
         <div class="card-menu" id="menu-${escapeHtml(w.id)}">
@@ -253,13 +281,24 @@
   const addModal = document.getElementById('addModal');
   document.getElementById('newWizardBtn').addEventListener('click', () => { addModal.classList.remove('hidden'); resetAddModal(); });
   document.getElementById('addModalClose').addEventListener('click', () => addModal.classList.add('hidden'));
+
+  // Three panes share the modal: paneUpload/paneGenerate are switched by the
+  // visible tabs, paneReview is a third step reached only via the "Review"
+  // button (and back again) — the tab strip hides while it's open since it
+  // isn't one of the two top-level choices.
+  const addTabsEl = document.querySelector('.add-tabs');
+  function showAddPane(name) {
+    document.querySelectorAll('.add-pane').forEach(p => p.classList.remove('active'));
+    document.getElementById(name).classList.add('active');
+    if (name === 'paneReview') {
+      addTabsEl.style.display = 'none';
+    } else {
+      addTabsEl.style.display = '';
+      document.querySelectorAll('.add-tabs button').forEach(b => b.classList.toggle('active', b.getAttribute('data-pane') === name));
+    }
+  }
   document.querySelectorAll('.add-tabs button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.add-tabs button').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.add-pane').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(btn.getAttribute('data-pane')).classList.add('active');
-    });
+    btn.addEventListener('click', () => showAddPane(btn.getAttribute('data-pane')));
   });
 
   function resetAddModal() {
@@ -267,84 +306,198 @@
     document.getElementById('mdPasteArea').value = '';
     document.getElementById('parseResult').innerHTML = '';
     document.getElementById('confirmAddBtn').style.display = 'none';
-    pendingParsed = null;
-    pendingFileName = null;
+    document.getElementById('reviewList').innerHTML = '';
+    pendingItems = [];
+    showAddPane('paneUpload');
   }
 
-  let pendingParsed = null; // { wizard, sourceMarkdown }
-  // The original uploaded/dropped filename, if any — auto-registered as a
-  // sourceFile so other wizards that say "work through <this-file>.md" can
-  // find and link to this one. Cleared for pasted text (no filename to go on).
-  let pendingFileName = null;
+  // One entry per file dropped/chosen, plus at most one for the paste
+  // textarea. `edit` seeds the review-step inputs (title/category/tags/date)
+  // and is the only thing the review step is allowed to change — the parsed
+  // wizard's steps/content are never touched.
+  let pendingItems = [];
 
-  function runParse(text) {
+  function upsertPendingItem(key, fileName, text) {
+    const existingIdx = pendingItems.findIndex(it => it.key === key);
+    if (!text || !text.trim()) {
+      if (existingIdx !== -1) pendingItems.splice(existingIdx, 1);
+      renderParseList();
+      return;
+    }
+    const { wizard, errors } = parseWizardMarkdown(text);
+    const item = {
+      key, fileName, sourceMarkdown: text, wizard, errors,
+      edit: wizard ? {
+        title: wizard.title,
+        category: wizard.category,
+        tags: (wizard.tags || []).join(', '),
+        date: wizard.date
+      } : null
+    };
+    if (existingIdx !== -1) pendingItems[existingIdx] = item; else pendingItems.push(item);
+    renderParseList();
+  }
+
+  function removePendingItem(key) {
+    pendingItems = pendingItems.filter(it => it.key !== key);
+    renderParseList();
+  }
+
+  function renderParseItemHtml(it) {
+    const source = it.fileName ? escapeHtml(it.fileName) : 'Pasted text';
+    if (it.wizard) {
+      const kindLabel = it.wizard.kind === 'article' ? 'Article (auto-converted from plain Markdown)' : 'Wizard';
+      const errorsHtml = (it.errors && it.errors.length)
+        ? `<ul class="parse-item-errors">${it.errors.map(e => `<li>${escapeHtml(e)}</li>`).join('')}</ul>` : '';
+      return `<div class="parse-item${it.errors && it.errors.length ? ' has-error' : ''}" data-key="${escapeHtml(it.key)}">
+        <div class="parse-item-main">
+          <strong>${escapeHtml(it.wizard.title)}</strong>
+          <div class="parse-item-meta">${kindLabel} \u00b7 ${escapeHtml(it.wizard.category)} \u00b7 ${Object.keys(it.wizard.steps).length} steps</div>
+          <div class="parse-item-source">${source}</div>
+          ${errorsHtml}
+        </div>
+        <button class="parse-item-remove" data-key="${escapeHtml(it.key)}" title="Remove">&times;</button>
+      </div>`;
+    }
+    return `<div class="parse-item has-error" data-key="${escapeHtml(it.key)}">
+      <div class="parse-item-main">
+        <strong>Couldn't build a wizard from this one</strong>
+        <div class="parse-item-source">${source}</div>
+        <ul class="parse-item-errors">${(it.errors || []).map(e => `<li>${escapeHtml(e)}</li>`).join('')}</ul>
+      </div>
+      <button class="parse-item-remove" data-key="${escapeHtml(it.key)}" title="Remove">&times;</button>
+    </div>`;
+  }
+
+  function renderParseList() {
     const resultEl = document.getElementById('parseResult');
     const confirmBtn = document.getElementById('confirmAddBtn');
-    if (!text.trim()) { resultEl.innerHTML = ''; confirmBtn.style.display = 'none'; return; }
-    const { wizard, errors } = parseWizardMarkdown(text);
-    let html = '';
-    if (wizard) {
-      html += `<div class="preview-box"><strong>${escapeHtml(wizard.title)}</strong><br>
-        ${escapeHtml(wizard.category)} \u00b7 ${Object.keys(wizard.steps).length} steps \u00b7 id: ${escapeHtml(wizard.id)}</div>`;
-    }
-    if (errors && errors.length) {
-      html += `<div class="parse-errors"><strong>${wizard ? 'Heads up' : "Couldn't build this wizard"}:</strong><ul>${errors.map(e => `<li>${escapeHtml(e)}</li>`).join('')}</ul></div>`;
-    }
-    resultEl.innerHTML = html;
-    if (wizard) {
-      pendingParsed = { wizard, sourceMarkdown: text };
+    if (!pendingItems.length) { resultEl.innerHTML = ''; confirmBtn.style.display = 'none'; return; }
+    resultEl.innerHTML = `<div class="parse-list">${pendingItems.map(renderParseItemHtml).join('')}</div>`;
+    resultEl.querySelectorAll('.parse-item-remove').forEach(btn => {
+      btn.addEventListener('click', () => removePendingItem(btn.getAttribute('data-key')));
+    });
+    const validCount = pendingItems.filter(it => it.wizard).length;
+    if (validCount) {
       confirmBtn.style.display = '';
+      confirmBtn.textContent = `Review ${validCount} wizard${validCount > 1 ? 's' : ''}`;
     } else {
-      pendingParsed = null;
       confirmBtn.style.display = 'none';
     }
   }
 
-  document.getElementById('mdFileInput').addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    pendingFileName = file.name;
-    const reader = new FileReader();
-    reader.onload = () => runParse(reader.result);
-    reader.readAsText(file);
-  });
-  document.getElementById('mdPasteArea').addEventListener('input', e => { pendingFileName = null; runParse(e.target.value); });
+  function readFileAsText(file) {
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => resolve('');
+      reader.readAsText(file);
+    });
+  }
+
+  // Handles any number of files from either the file picker or a drop —
+  // each one gets its own pending item, parsed and listed independently.
+  function handleFiles(fileList) {
+    Array.from(fileList || []).forEach(file => {
+      readFileAsText(file).then(text => upsertPendingItem('file:' + file.name.toLowerCase(), file.name, text));
+    });
+  }
+
+  document.getElementById('mdFileInput').addEventListener('change', e => { handleFiles(e.target.files); });
+  document.getElementById('mdPasteArea').addEventListener('input', e => { upsertPendingItem('__paste__', null, e.target.value); });
 
   const dropzone = document.getElementById('dropzone');
   ['dragover', 'dragenter'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
   ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
-  dropzone.addEventListener('drop', e => {
-    const file = e.dataTransfer.files[0];
-    if (!file) return;
-    pendingFileName = file.name;
-    const reader = new FileReader();
-    reader.onload = () => runParse(reader.result);
-    reader.readAsText(file);
-  });
+  dropzone.addEventListener('drop', e => { handleFiles(e.dataTransfer.files); });
   dropzone.addEventListener('click', () => document.getElementById('mdFileInput').click());
 
-  document.getElementById('confirmAddBtn').addEventListener('click', () => {
-    if (!pendingParsed) return;
-    // Register both any `sourceFiles:` the doc's frontmatter declared and the
-    // actual uploaded/dropped filename (if any), so a checklist elsewhere
-    // like "work through this-file.md" can find its way back to this wizard.
-    const declared = pendingParsed.wizard.sourceFiles || [];
-    const auto = pendingFileName ? [pendingFileName] : [];
-    const seen = new Set();
-    const sourceFiles = declared.concat(auto).filter(sf => {
-      const key = (typeof sf === 'string' ? sf : sf.file || '').trim().toLowerCase();
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
+  // ---------------- review step: edit labels, not content ----------------
+  function openReviewPane() {
+    const validItems = pendingItems.filter(it => it.wizard);
+    if (!validItems.length) return;
+    document.getElementById('reviewList').innerHTML = validItems.map(it => {
+      const kindLabel = it.wizard.kind === 'article' ? 'Article' : 'Wizard';
+      const source = it.fileName ? escapeHtml(it.fileName) : 'Pasted text';
+      return `<div class="review-item" data-key="${escapeHtml(it.key)}">
+        <div class="review-item-head">
+          <span class="badge">${kindLabel}</span>
+          <span class="review-item-source">${source} \u00b7 ${Object.keys(it.wizard.steps).length} steps</span>
+        </div>
+        <div class="field">
+          <label>Title</label>
+          <input type="text" class="ri-title" value="${escapeHtml(it.edit.title)}">
+        </div>
+        <div class="review-row">
+          <div class="field">
+            <label>Category</label>
+            <input type="text" class="ri-category" value="${escapeHtml(it.edit.category)}">
+          </div>
+          <div class="field">
+            <label>Date</label>
+            <input type="date" class="ri-date" value="${escapeHtml(it.edit.date)}">
+          </div>
+        </div>
+        <div class="field">
+          <label>Tags (comma separated)</label>
+          <input type="text" class="ri-tags" value="${escapeHtml(it.edit.tags)}">
+        </div>
+      </div>`;
+    }).join('');
+    showAddPane('paneReview');
+  }
+  document.getElementById('confirmAddBtn').addEventListener('click', openReviewPane);
+  document.getElementById('reviewBackBtn').addEventListener('click', () => showAddPane('paneUpload'));
+
+  function existingWizardIds() {
+    const ids = new Set(manifestWizards.map(w => w.id));
+    Object.keys(Storage.getCustomWizards()).forEach(id => ids.add(id));
+    return ids;
+  }
+
+  document.getElementById('reviewConfirmBtn').addEventListener('click', () => {
+    const takenIds = existingWizardIds();
+    let added = 0;
+    document.querySelectorAll('#reviewList .review-item').forEach(row => {
+      const key = row.getAttribute('data-key');
+      const item = pendingItems.find(it => it.key === key);
+      if (!item || !item.wizard) return;
+
+      const title = row.querySelector('.ri-title').value.trim() || item.wizard.title;
+      const category = row.querySelector('.ri-category').value.trim() || 'Uncategorized';
+      const tags = row.querySelector('.ri-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+      const date = row.querySelector('.ri-date').value.trim() || item.wizard.date;
+
+      // Id follows the (possibly edited) title, uniquified against every
+      // existing wizard and everything else in this same batch.
+      const base = slug(title);
+      let id = base, n = 2;
+      while (takenIds.has(id)) { id = base + '-' + n; n++; }
+      takenIds.add(id);
+
+      // Register both any `sourceFiles:` the doc's frontmatter declared and
+      // the actual uploaded/dropped filename (if any), so a checklist
+      // elsewhere like "work through this-file.md" can find its way back.
+      const declared = item.wizard.sourceFiles || [];
+      const auto = item.fileName ? [item.fileName] : [];
+      const seen = new Set();
+      const sourceFiles = declared.concat(auto).filter(sf => {
+        const sfKey = (typeof sf === 'string' ? sf : sf.file || '').trim().toLowerCase();
+        if (!sfKey || seen.has(sfKey)) return false;
+        seen.add(sfKey);
+        return true;
+      });
+
+      const data = Object.assign({}, item.wizard, {
+        id, title, category, tags, date, sourceFiles,
+        _sourceMarkdown: item.sourceMarkdown,
+        _addedAt: new Date().toISOString().slice(0, 10)
+      });
+      Storage.saveCustomWizard(data);
+      added++;
     });
-    const data = Object.assign({}, pendingParsed.wizard, {
-      sourceFiles,
-      _sourceMarkdown: pendingParsed.sourceMarkdown,
-      _addedAt: new Date().toISOString().slice(0, 10)
-    });
-    Storage.saveCustomWizard(data);
     addModal.classList.add('hidden');
-    showToast('Wizard added.');
+    showToast(added === 1 ? 'Wizard added.' : `${added} wizards added.`);
     refresh();
   });
 

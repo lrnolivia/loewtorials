@@ -1,0 +1,36 @@
+# Cloudflare Workers configuration for loewtorials (static site + one
+# API route, both served from a single Worker). See CLOUDFLARE-SETUP.md
+# for the full walkthrough, including how to create the KV namespace and
+# fill in its id below.
+
+# Shows up in the Cloudflare dashboard and in your *.workers.dev URL —
+# change it if you want a different project name.
+name = "loewtorials"
+main = "worker/index.js"
+compatibility_date = "2026-08-27"
+
+# Serve the static site (index.html, wizard.html, assets/*, wizards/*)
+# straight from this repo. run_worker_first sends /api/* to worker/index.js
+# instead of being treated as a (nonexistent) static file; everything else
+# is served as a plain static asset without even invoking the Worker.
+[assets]
+directory = "."
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
+
+[[kv_namespaces]]
+binding = "LOEWTORIALS_KV"
+# Replace with the id printed by:
+#   npx wrangler kv namespace create LOEWTORIALS_KV
+id = "9055fabf31d54ba2a5e09fc50485a656"
+
+# Uncomment for a separate namespace on preview/branch deployments, if
+# you set those up later. Optional — production works without this.
+# [env.preview]
+# kv_namespaces = [
+#   { binding = "LOEWTORIALS_KV", id = "REPLACE_WITH_YOUR_PREVIEW_NAMESPACE_ID" }
+# ]
+
+# SITE_PASSWORD is deliberately NOT set here — it's a secret, and secrets
+# don't belong in a committed file. Set it with:
+#   npx wrangler secret put SITE_PASSWORD

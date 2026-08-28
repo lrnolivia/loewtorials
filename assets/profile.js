@@ -1,23 +1,18 @@
 // profile.js
-// System profile: hand-entered PC specs (model, CPU, GPU, RAM, OS, disk
-// layout) plus an optional uploaded Containerfile, heuristically parsed
-// into a flat list of "detected facts" (base image, branch, installed
-// packages). Rendered as a small card in the dashboard masthead. Consumed
-// by wizard-engine.js (via opts.profile) to show "detected on your
-// system" badges on steps that declare `relevantPackages`.
+// Containerfile detection: an optional uploaded Containerfile,
+// heuristically parsed into a flat list of "detected facts" (base
+// image, branch, installed packages). Consumed by wizard-engine.js (via
+// opts.profile) to show "detected on your system" badges on steps that
+// declare `relevantPackages`.
 //
-// The Containerfile parser is intentionally simple and line-based — it is
-// not a shell interpreter. Unrecognized lines are ignored, never errors.
-
-const SPEC_FIELDS = [
-  { key: 'model', label: 'Model', icon: '\u{1F5A5}\uFE0F' },
-  { key: 'cpu', label: 'CPU', icon: '\u{1F5A7}\uFE0F' },
-  { key: 'gpu', label: 'GPU', icon: '\u{1F3AE}' },
-  { key: 'ram', label: 'RAM', icon: '\u{1F4BE}' },
-  { key: 'os', label: 'OS', icon: '\u{1F5B3}\uFE0F' },
-  { key: 'kernel', label: 'Kernel', icon: '\u{1F427}' },
-  { key: 'disks', label: 'Disks', icon: '\u{1F4C0}' }
-];
+// The hand-entered spec form (model/CPU/GPU/RAM/OS) that used to live
+// here is gone — the header now shows static specs for one real
+// machine (see assets/header.js) instead of a per-browser editable
+// card, so there's nothing left to persist or render for that part.
+//
+// The Containerfile parser is intentionally simple and line-based — it
+// is not a shell interpreter. Unrecognized lines are ignored, never
+// errors.
 
 // ---------------------------------------------------------------------
 // Containerfile parsing (heuristic, line-based)
@@ -80,63 +75,27 @@ function parseContainerfile(raw) {
   return result;
 }
 
-// ---------------------------------------------------------------------
-// Dashboard spec card
-// ---------------------------------------------------------------------
-function renderSpecCard(containerEl) {
-  if (!containerEl) return;
-  const profile = Storage.getProfile();
-  const specs = profile.specs || {};
-  const hasAny = SPEC_FIELDS.some(f => specs[f.key]);
-
-  if (!hasAny) {
-    containerEl.className = 'spec-card empty';
-    containerEl.innerHTML = `No system specs saved yet \u2014 <button class="btn-ghost btn-sm btn" id="specEditBtn" type="button">add yours</button>`;
-  } else {
-    containerEl.className = 'spec-card';
-    containerEl.innerHTML = SPEC_FIELDS
-      .filter(f => specs[f.key])
-      .map(f => `<span class="spec-item"><span class="spec-ico">${f.icon}</span><strong>${escapeHtmlP(specs[f.key])}</strong></span>`)
-      .join('') + `<button class="icon-btn spec-edit" id="specEditBtn" type="button">edit</button>`;
-  }
-  const btn = containerEl.querySelector('#specEditBtn');
-  if (btn) btn.addEventListener('click', () => openProfileModal());
-}
-
 function escapeHtmlP(str) {
   return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // ---------------------------------------------------------------------
-// Profile modal: specs form + Containerfile upload
+// Containerfile modal (upload only — no spec fields)
 // ---------------------------------------------------------------------
-function buildProfileModalHTML() {
-  const fields = SPEC_FIELDS.map(f => `
-    <div class="field">
-      <label>${f.label}</label>
-      <input type="text" id="spec-${f.key}" placeholder="${f.label}">
-    </div>`).join('');
-
+function buildContainerfileModalHTML() {
   return `
-  <div class="modal-backdrop hidden" id="profile-backdrop">
+  <div class="modal-backdrop hidden" id="cf-backdrop">
     <div class="modal">
-      <button class="modal-close" id="profile-close" aria-label="Close">&times;</button>
-      <h2>System profile</h2>
-      <p class="hint">Shown as a small header card on the dashboard, and used to flag which wizard steps apply to your setup. Nothing here leaves this browser.</p>
-
-      <div class="settings-grid">${fields}</div>
-
-      <div class="divider">Containerfile</div>
-      <p class="hint">Upload your build's Containerfile to auto-detect installed packages and your image branch. Re-upload any time \u2014 wizard steps that declare relevant packages will show a match against whatever was parsed most recently.</p>
+      <button class="modal-close" id="cf-close" aria-label="Close">&times;</button>
+      <h2>Containerfile detection</h2>
+      <p class="hint">Upload your build's Containerfile to auto-detect installed packages and your image branch. Re-upload any time \u2014 wizard steps that declare relevant packages will show a match against whatever was parsed most recently. Nothing here leaves this browser.</p>
       <div class="dropzone" id="cf-dropzone">
         <strong>Click to upload</strong> or drag your Containerfile here.
         <input type="file" id="cf-file-input" accept=".txt,text/plain,Containerfile,*" style="display:none">
       </div>
       <div id="cf-summary"></div>
-
-      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-        <button class="btn btn-ghost" id="profile-cancel">Close</button>
-        <button class="btn btn-primary" id="profile-save">Save specs</button>
+      <div style="display:flex; justify-content:flex-end; margin-top:20px;">
+        <button class="btn btn-primary" id="cf-done">Done</button>
       </div>
     </div>
   </div>`;
@@ -163,45 +122,28 @@ function renderContainerfileSummary(el) {
   });
 }
 
-let _profileModalInited = false;
-function openProfileModal() {
-  if (!_profileModalInited) {
-    if (!document.getElementById('profile-backdrop')) {
+let _cfModalInited = false;
+function openContainerfileModal() {
+  if (!_cfModalInited) {
+    if (!document.getElementById('cf-backdrop')) {
       const wrap = document.createElement('div');
-      wrap.innerHTML = buildProfileModalHTML();
+      wrap.innerHTML = buildContainerfileModalHTML();
       document.body.appendChild(wrap.firstElementChild);
     }
-    wireProfileModal();
-    _profileModalInited = true;
+    wireContainerfileModal();
+    _cfModalInited = true;
   }
-  const profile = Storage.getProfile();
-  const specs = profile.specs || {};
-  SPEC_FIELDS.forEach(f => {
-    const input = document.getElementById('spec-' + f.key);
-    if (input) input.value = specs[f.key] || '';
-  });
   renderContainerfileSummary(document.getElementById('cf-summary'));
-  document.getElementById('profile-backdrop').classList.remove('hidden');
+  document.getElementById('cf-backdrop').classList.remove('hidden');
 }
+window.openContainerfileModal = openContainerfileModal;
 
-function wireProfileModal() {
-  const backdrop = document.getElementById('profile-backdrop');
+function wireContainerfileModal() {
+  const backdrop = document.getElementById('cf-backdrop');
   const close = () => backdrop.classList.add('hidden');
-  document.getElementById('profile-close').addEventListener('click', close);
-  document.getElementById('profile-cancel').addEventListener('click', close);
+  document.getElementById('cf-close').addEventListener('click', close);
+  document.getElementById('cf-done').addEventListener('click', close);
   backdrop.addEventListener('click', e => { if (e.target === backdrop) close(); });
-
-  document.getElementById('profile-save').addEventListener('click', () => {
-    const specs = {};
-    SPEC_FIELDS.forEach(f => {
-      const input = document.getElementById('spec-' + f.key);
-      if (input && input.value.trim()) specs[f.key] = input.value.trim();
-    });
-    Storage.setProfileSpecs(specs);
-    if (window.showToast) window.showToast('System profile saved.');
-    close();
-    if (window.refreshSpecCard) window.refreshSpecCard();
-  });
 
   const dropzone = document.getElementById('cf-dropzone');
   const fileInput = document.getElementById('cf-file-input');
@@ -214,7 +156,6 @@ function wireProfileModal() {
       Storage.setProfileContainerfile(raw, parsed);
       renderContainerfileSummary(document.getElementById('cf-summary'));
       if (window.showToast) window.showToast('Containerfile parsed \u2014 ' + parsed.installedPackages.length + ' package(s) detected.');
-      if (window.refreshSpecCard) window.refreshSpecCard();
     };
     reader.readAsText(file);
   }

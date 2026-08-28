@@ -1,41 +1,23 @@
-.shell{ max-width: min(var(--shell-max-width), 96vw); margin:0 auto; padding: clamp(24px,4vw,56px) clamp(14px,2.5vw,28px) 80px; }
+/* The dashboard now uses the shared .shell-grid + .rail sidebar system
+   (styles.css) instead of a single centered .shell column — .dash-content
+   just adds a bottom pad on top of the shared .stage padding. */
+.dash-content{ padding-bottom:80px; }
 
-/* system-specs card (masthead) — this is the "spec bar" from §4: same
-   surface as .wizard-card in brutal, but the loud a1-filled bar in
-   dopamine. Text pairing follows whichever surface is actually behind
-   it in each style (surft in brutal, a1t in dopamine), not a fixed
-   --tx-muted, since that would go unreadable the moment the background
-   turns into a solid accent. */
-.spec-card{
-  display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center;
-  background:var(--panel); border:var(--border-w) solid var(--border); border-radius:var(--radius);
-  padding:10px 16px; font-family:var(--f-mono); font-size:0.75rem; color:var(--tx-muted);
-  margin-top:10px;
+/* sidebar nav: status filters (All/Active/Solved/Archived) and, further
+   down, the categories shortcut list — both reuse this same vertical
+   button-list look. */
+.dash-nav{ display:flex; flex-direction:column; gap:4px; margin-bottom:6px; }
+.dash-nav button{
+  background:transparent; border:none; color:var(--tx-muted); text-align:left;
+  padding:8px 10px; border-radius:var(--radius); cursor:pointer; font-family:var(--f-mono); font-size:0.78125rem;
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
 }
-.spec-card .spec-item{ display:flex; align-items:center; gap:6px; white-space:nowrap; }
-.spec-card .spec-item .spec-ico{ font-size:0.9rem; }
-.spec-card .spec-item strong{ color:var(--tx); font-weight:600; }
-.spec-card .spec-edit{ margin-left:auto; }
-.spec-card.empty{ color:var(--tx-faint); font-style:italic; }
-
-[data-style="brutal"] .spec-card{
-  background:var(--surf); color:var(--surft-muted); border:3px solid var(--border); box-shadow:7px 7px 0 var(--border); border-radius:0;
-}
-[data-style="brutal"] .spec-card .spec-item strong{ color:var(--surft); }
-[data-style="dopamine"] .spec-card{
-  background:var(--a1); color:var(--a1t); border:none; box-shadow:none; border-radius:20px;
-}
-[data-style="dopamine"] .spec-card .spec-item strong{ color:var(--a1t); }
-[data-style="dopamine"] .spec-card.empty{ background:var(--panel); color:var(--tx-faint); }
-
-/* view tabs: Active / Solved / Archived */
-.view-tabs{ display:flex; gap:6px; margin-bottom:16px; }
-.view-tabs button{
-  background:transparent; border:1px solid var(--border); color:var(--tx-muted);
-  padding:7px 14px; border-radius:999px; cursor:pointer; font-family:var(--f-mono); font-size:0.75rem;
-}
-.view-tabs button.active{ border-color:var(--a1); color:var(--a1); background:var(--a1-dim); }
-.view-tabs button .count{ color:var(--tx-faint); margin-left:4px; }
+.dash-nav button:hover{ background: color-mix(in srgb, var(--a1) 10%, transparent); color:var(--tx); }
+.dash-nav button.active{ color:var(--a1); background:var(--a1-dim); font-weight:600; }
+.dash-nav button .count{ color:var(--tx-faint); }
+.dash-nav button.active .count{ color:var(--a1); }
+.dash-nav-categories button{ font-size:0.75rem; }
+.dash-nav-categories:empty{ display:none; }
 
 .status-badge{
   font-family:var(--f-mono); font-size:0.63rem; letter-spacing:0.04em; text-transform:uppercase;
@@ -48,10 +30,6 @@
    text color happens to be "current" the way solved's self-contained
    a1/a1t fill can. */
 .status-badge.archived{ border:1px solid var(--border); color:var(--tx-faint); background:var(--panel); }
-
-.masthead{ display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap; margin-bottom: clamp(22px,3vw,34px); }
-.masthead h1{ font-family:var(--f-display); font-weight:700; font-size:clamp(1.625rem,4vw,2.375rem); margin:6px 0 0; letter-spacing:-0.01em; }
-.masthead .tagline{ color:var(--tx-muted); font-size:0.90625rem; margin:8px 0 0; max-width:52ch; }
 
 .toolbar{
   display:flex; gap:10px; flex-wrap:wrap; align-items:center;
@@ -128,8 +106,6 @@
   border-radius:var(--radius); font-size:0.875rem;
 }
 
-.new-wizard-btn{ margin-left:auto; }
-
 .add-tabs{ display:flex; gap:8px; margin-bottom:18px; }
 .add-tabs button{
   flex:1; background:var(--bg); border:var(--border-w) solid var(--border); color:var(--tx-muted);
@@ -140,17 +116,41 @@
 .add-pane{ display:none; }
 .add-pane.active{ display:block; }
 
-.spec-actions{ display:flex; gap:10px; flex-wrap:wrap; }
-.spec-actions .btn{ flex:1; min-width:150px; justify-content:center; }
+/* .spec-actions, .preview-box and .parse-errors moved to styles.css —
+   settings.js (Layout & data modal's Containerfile/Sync/Backup button
+   rows) and profile.js (spec preview) both use these classes and both
+   run on wizard.html too, which never loaded dashboard.css. They were
+   rendering completely unstyled there — no flex layout, no gap, no
+   wrapping — which is what made those buttons look crammed together.
+   See styles.css for the current rules. */
 
-.parse-errors{
-  border:1px dashed var(--danger); background: var(--danger-dim); color:var(--tx);
-  border-radius:8px; padding:10px 12px; font-size:0.78125rem; margin-top:10px; max-height:160px; overflow-y:auto;
+/* ---- multi-file parse checklist (add-wizard, upload pane) ---- */
+.parse-list{ display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+.parse-item{
+  border:1px solid var(--border); border-radius:8px; background:var(--bg);
+  padding:10px 12px; display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
 }
-.parse-errors ul{ margin:4px 0 0; padding-left:18px; }
+.parse-item.has-error{ border-color:var(--danger); }
+.parse-item-main{ flex:1; min-width:0; font-size:0.8125rem; }
+.parse-item-main strong{ color:var(--a1); word-break:break-word; }
+.parse-item.has-error .parse-item-main strong{ color:var(--tx); }
+.parse-item-meta{ font-size:0.75rem; color:var(--tx-muted); margin-top:2px; }
+.parse-item-source{ font-family:var(--f-mono); font-size:0.6875rem; color:var(--tx-faint); margin-top:2px; }
+.parse-item-errors{ margin:6px 0 0; padding-left:16px; font-size:0.75rem; color:var(--danger); }
+.parse-item-remove{
+  flex:none; background:none; border:none; color:var(--tx-faint); font-size:1.1rem; line-height:1;
+  cursor:pointer; padding:2px 4px;
+}
+.parse-item-remove:hover{ color:var(--danger); }
 
-.preview-box{
-  border:1px solid var(--a1); background: var(--a1-dim); border-radius:8px;
-  padding:12px 14px; margin-top:10px; font-size:0.8125rem; color:var(--tx);
+/* ---- review-and-edit step (add-wizard, second confirmation screen) ---- */
+.review-item{
+  border:1px solid var(--border); border-radius:10px; background:var(--bg);
+  padding:14px; margin-bottom:12px;
 }
-.preview-box strong{ color:var(--a1); }
+.review-item-head{ display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.review-item-source{ font-family:var(--f-mono); font-size:0.6875rem; color:var(--tx-faint); }
+.review-item .field{ margin-bottom:10px; }
+.review-item .field:last-child{ margin-bottom:0; }
+.review-row{ display:flex; gap:10px; }
+.review-row .field{ flex:1; min-width:0; }

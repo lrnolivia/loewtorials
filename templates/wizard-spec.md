@@ -9,6 +9,30 @@ Output **one single Markdown file** and nothing else (no explanation before
 or after it, unless the person asks you questions first — ask those, get
 answers, then output the file).
 
+## 0. You don't have to use this format
+
+Any plain Markdown file — a README, a handoff doc, personal notes, no
+`Group:`/`Step:`/`Branch:`/`Outcome:` headings at all — can also be
+uploaded as-is. The dashboard auto-detects this and tries to build a real
+wizard out of it, deterministically, no LLM involved:
+
+- a `##` section containing `###` sub-sections becomes a Group of Steps
+  (same as writing them by hand)
+- a `##`/`###` heading that ends in a **?**, whose body is *only* a bullet
+  list where every bullet clearly names another heading — via
+  `- Label -> Target heading`, a quoted `"Target heading"`, or "see/go to
+  Target heading" — becomes a real Branch with Choices
+- everything else chains in document order, ending in a plain Outcome
+
+If a document doesn't cleanly satisfy that (mixed grouping, a `?` heading
+whose options don't resolve, content that isn't reachable by clicking
+through, etc.), the wizard still gets built, but is flagged low-confidence
+with the specific reasons — the dashboard shows a warning and suggests
+switching to **Article view** instead, and every wizard (however it was
+built) can be read as one long scrollable article, or set to open that way
+by default. Use the explicit format below when you want more control over
+branches or grouping than the heuristics can infer on their own.
+
 ## 1. Frontmatter
 
 Start with a frontmatter block:
@@ -68,7 +92,13 @@ So when you're writing a wizard that says "go work through X.md first," it's
 worth checking whether X already exists on the dashboard and, if the person
 tells you its wizard id or filename, mentioning it by that exact name.
 
-## 2. Structure: Groups, Steps, Branches, Outcomes
+## 2. Structure: Overview, Groups, Steps, Branches, Outcomes
+
+Optionally, put a plain-prose intro directly after the frontmatter, before
+the first `Group:`/`Step:` heading — a paragraph or two summarizing what
+the wizard covers and why. This becomes a real first step titled
+"Overview" that the person sees before step one, so it's worth writing a
+proper summary here rather than skipping straight to Step 1.
 
 The rest of the document is a sequence of headings. **Document order is the
 flow** — a plain Step automatically moves to whatever comes right after it.
@@ -148,6 +178,9 @@ tags: laptop, troubleshooting, power
 date: 2026-08-26
 description: A short decision tree for a laptop that shows no signs of life.
 ---
+
+A quick triage flow for a laptop that won't power on at all: start with the
+charger and power button, and only open the case if nothing else works.
 
 ## Group: power | Power Checks
 

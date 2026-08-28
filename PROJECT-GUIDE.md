@@ -6,10 +6,12 @@ here in the same session, especially "State of the project" at the bottom.
 
 ## What this is
 
-A personal static dashboard of interactive step-by-step guides ("wizards").
-No backend, no build step, no framework — plain HTML/CSS/JS, deployed as-is
-(e.g. to Netlify). See `README.md` for the user-facing pitch, deployment
-instructions, and the wizard markdown format's full spec is in
+A personal dashboard of interactive step-by-step guides ("wizards"). No
+build step, no framework — plain HTML/CSS/JS, deployed as a single
+Cloudflare Worker (`worker/index.js`) that serves the static site and
+handles one API route for cross-device sync. See `README.md` for the
+user-facing pitch and deployment instructions, `CLOUDFLARE-SETUP.md` for
+the sync setup, and the wizard markdown format's full spec is in
 `templates/wizard-spec.md`.
 
 ## File inventory + conventions
