@@ -22,7 +22,7 @@ run_worker_first = ["/api/*"]
 binding = "LOEWTORIALS_KV"
 # Replace with the id printed by:
 #   npx wrangler kv namespace create LOEWTORIALS_KV
-id = "REPLACE_WITH_YOUR_NAMESPACE_ID"
+id = "9055fabf31d54ba2a5e09fc50485a656"
 
 # Uncomment for a separate namespace on preview/branch deployments, if
 # you set those up later. Optional — production works without this.
