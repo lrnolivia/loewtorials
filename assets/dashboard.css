@@ -1,13 +1,23 @@
-.shell{ max-width: min(var(--shell-max-width), 96vw); margin:0 auto; padding: clamp(24px,4vw,56px) clamp(14px,2.5vw,28px) 80px; }
+/* The dashboard now uses the shared .shell-grid + .rail sidebar system
+   (styles.css) instead of a single centered .shell column — .dash-content
+   just adds a bottom pad on top of the shared .stage padding. */
+.dash-content{ padding-bottom:80px; }
 
-/* view tabs: Active / Solved / Archived */
-.view-tabs-row{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
-.view-tabs button{
-  background:transparent; border:1px solid var(--border); color:var(--tx-muted);
-  padding:7px 14px; border-radius:999px; cursor:pointer; font-family:var(--f-mono); font-size:0.75rem;
+/* sidebar nav: status filters (All/Active/Solved/Archived) and, further
+   down, the categories shortcut list — both reuse this same vertical
+   button-list look. */
+.dash-nav{ display:flex; flex-direction:column; gap:4px; margin-bottom:6px; }
+.dash-nav button{
+  background:transparent; border:none; color:var(--tx-muted); text-align:left;
+  padding:8px 10px; border-radius:var(--radius); cursor:pointer; font-family:var(--f-mono); font-size:0.78125rem;
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
 }
-.view-tabs button.active{ border-color:var(--a1); color:var(--a1); background:var(--a1-dim); }
-.view-tabs button .count{ color:var(--tx-faint); margin-left:4px; }
+.dash-nav button:hover{ background: color-mix(in srgb, var(--a1) 10%, transparent); color:var(--tx); }
+.dash-nav button.active{ color:var(--a1); background:var(--a1-dim); font-weight:600; }
+.dash-nav button .count{ color:var(--tx-faint); }
+.dash-nav button.active .count{ color:var(--a1); }
+.dash-nav-categories button{ font-size:0.75rem; }
+.dash-nav-categories:empty{ display:none; }
 
 .status-badge{
   font-family:var(--f-mono); font-size:0.63rem; letter-spacing:0.04em; text-transform:uppercase;
@@ -95,8 +105,6 @@
   text-align:center; padding: 60px 20px; color:var(--tx-muted); border:1px dashed var(--border);
   border-radius:var(--radius); font-size:0.875rem;
 }
-
-.new-wizard-btn{ margin-left:auto; }
 
 .add-tabs{ display:flex; gap:8px; margin-bottom:18px; }
 .add-tabs button{

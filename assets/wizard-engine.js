@@ -67,7 +67,15 @@ function createWizardEngine(rootEl, wizard, opts) {
     currentId = id;
     banner = stepOpts.banner || null;
     render();
-    if (!opts.suppressScroll && rootEl.scrollIntoView) rootEl.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    // Scroll the step card itself into view, not the whole rootEl grid
+    // (which includes the sidebar) — scrolling the full grid used to yank
+    // the sidebar along with it and fight with the sidebar's own sticky
+    // positioning, which is what made the page feel like it "wouldn't
+    // scroll correctly" while stepping through a wizard.
+    if (!opts.suppressScroll) {
+      const scrollTarget = rootEl.querySelector('[data-w="stepCard"]') || rootEl;
+      if (scrollTarget.scrollIntoView) scrollTarget.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
     if (opts.onNavigate) opts.onNavigate(currentId, history);
   }
 

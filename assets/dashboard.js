@@ -13,6 +13,16 @@
   const categorySelect = document.getElementById('categorySelect');
   const sortSelect = document.getElementById('sortSelect');
   const toast = document.getElementById('toast');
+  const categoryNav = document.getElementById('categoryNav');
+
+  // mobile sidebar toggle (mirrors the wizard page's rail/backdrop wiring)
+  const rail = document.getElementById('rail');
+  const railBackdrop = document.getElementById('railBackdrop');
+  const openRailBtn = document.getElementById('openRail');
+  if (openRailBtn && rail && railBackdrop) {
+    openRailBtn.addEventListener('click', () => { rail.classList.add('open'); railBackdrop.classList.add('open'); });
+    railBackdrop.addEventListener('click', () => { rail.classList.remove('open'); railBackdrop.classList.remove('open'); });
+  }
 
   function showToast(msg, isError) {
     toast.textContent = msg;
@@ -78,6 +88,24 @@
     categorySelect.innerHTML = '<option value="">All categories</option>' +
       cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
     if (cats.includes(current)) categorySelect.value = current;
+    renderCategoryNav(cats, current);
+  }
+
+  // Sidebar shortcut list for categories — clicking one sets the same
+  // filter as the toolbar's category <select>, just reachable from the
+  // nav without scrolling to the toolbar.
+  function renderCategoryNav(cats, current) {
+    if (!categoryNav) return;
+    categoryNav.innerHTML = cats.map(c =>
+      `<button type="button" data-category="${escapeHtml(c)}" class="${c === current ? 'active' : ''}">${escapeHtml(c)}</button>`
+    ).join('');
+    categoryNav.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cat = btn.getAttribute('data-category');
+        categorySelect.value = categorySelect.value === cat ? '' : cat;
+        refresh();
+      });
+    });
   }
 
   function applyFiltersAndSort(all) {

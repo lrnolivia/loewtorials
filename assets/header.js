@@ -64,33 +64,53 @@ function contrastRatio(hexA, hexB) {
 // ---------------------------------------------------------------------
 // Header markup
 // ---------------------------------------------------------------------
-function buildHeaderHTML() {
-  const specsHtml = HEADER_SPECS.map(s =>
-    '<span class="spec-item"><span class="spec-icon">' + s.icon + '</span><b>' + s.label + '</b></span>').join('');
+// Split into two pieces, mounted separately:
+//   - buildUtilityHTML(): the persistent sticky top bar (icons, search,
+//     mini brand/specs once scrolled). Always mounted at #appHeaderMount,
+//     full width, but its own content is capped to --shell-max-width
+//     (see .utility-inner in styles.css) so it lines up with the
+//     sidebar+content grid beneath it.
+//   - buildHeroHTML(): the big mark/title/tagline + specs bar. Mounted at
+//     #appHeroMount, which each page places *inside* its content column
+//     (to the right of the sidebar rail) instead of full-width above the
+//     grid — that's what lets the sidebar sit beside the hero and
+//     connect visually to the top bar, instead of only starting below
+//     the whole hero block.
+function buildUtilityHTML() {
   const miniSpecsHtml = HEADER_SPECS.map(s => '<span>' + s.icon + '</span>').join('');
 
   return '' +
   '<header class="app-header">' +
     '<div class="utility">' +
-      '<button class="home-btn" id="hdrHomeBtn" title="Home">\u2302</button>' +
-      '<div class="mini-brand"><span class="mark">\u{1F9F0}</span><span class="word">loewtorials</span></div>' +
-      '<div class="mini-specs" id="hdrMiniSpecs">' + miniSpecsHtml + '</div>' +
-      '<div class="header-spacer"></div>' +
-      '<div class="hsearch" id="hdrSearch">' +
-        '<button class="hsearch-btn" id="hdrSearchOpenBtn" title="Jump to a wizard">\u{1F50D}</button>' +
-        '<div class="hsearch-box">' +
-          '<input type="text" id="hdrSearchInput" placeholder="Jump to a wizard\u2026">' +
-          '<button class="hsearch-close" id="hdrSearchCloseBtn" type="button">\u2715</button>' +
+      '<div class="utility-inner">' +
+        '<button class="home-btn" id="hdrHomeBtn" title="Home">\u2302</button>' +
+        '<div class="mini-brand"><span class="mark">\u{1F9F0}</span><span class="word">loewtorials</span></div>' +
+        '<div class="mini-specs" id="hdrMiniSpecs">' + miniSpecsHtml + '</div>' +
+        '<div class="header-spacer"></div>' +
+        '<div class="hsearch" id="hdrSearch">' +
+          '<button class="hsearch-btn" id="hdrSearchOpenBtn" title="Jump to a wizard">\u{1F50D}</button>' +
+          '<div class="hsearch-box">' +
+            '<input type="text" id="hdrSearchInput" placeholder="Jump to a wizard\u2026">' +
+            '<button class="hsearch-close" id="hdrSearchCloseBtn" type="button">\u2715</button>' +
+          '</div>' +
+          '<div class="hsearch-drop" id="hdrSearchDrop"></div>' +
         '</div>' +
-        '<div class="hsearch-drop" id="hdrSearchDrop"></div>' +
+        '<div class="theme-pop-anchor" id="hdrPaintAnchor">' +
+          '<button class="header-icon-btn" id="hdrPaintBtn" title="Theme">\u{1F58C}\uFE0F</button>' +
+          '<div class="theme-pop" id="hdrThemePop"></div>' +
+        '</div>' +
+        '<button class="header-icon-btn" id="hdrGearBtn" title="Settings">\u2699\uFE0F</button>' +
       '</div>' +
-      '<div class="theme-pop-anchor" id="hdrPaintAnchor">' +
-        '<button class="header-icon-btn" id="hdrPaintBtn" title="Theme">\u{1F58C}\uFE0F</button>' +
-        '<div class="theme-pop" id="hdrThemePop"></div>' +
-      '</div>' +
-      '<button class="header-icon-btn" id="hdrGearBtn" title="Settings">\u2699\uFE0F</button>' +
     '</div>' +
     '<div class="a3-stripe"></div>' +
+  '</header>';
+}
+
+function buildHeroHTML() {
+  const specsHtml = HEADER_SPECS.map(s =>
+    '<span class="spec-item"><span class="spec-icon">' + s.icon + '</span><b>' + s.label + '</b></span>').join('');
+
+  return '' +
     '<section class="app-hero">' +
       '<div class="mark">\u{1F9F0}</div>' +
       '<h1>loewtorials</h1>' +
@@ -98,8 +118,7 @@ function buildHeaderHTML() {
     '</section>' +
     '<div class="specs-bar-wrap">' +
       '<div class="specs-bar" id="hdrSpecsBar">' + specsHtml + '</div>' +
-    '</div>' +
-  '</header>';
+    '</div>';
 }
 
 // ---------------------------------------------------------------------
@@ -356,7 +375,10 @@ function wireIconButtons() {
 function initHeader() {
   const mount = document.getElementById('appHeaderMount');
   if (!mount) return;
-  mount.innerHTML = buildHeaderHTML();
+  mount.innerHTML = buildUtilityHTML();
+
+  const heroMount = document.getElementById('appHeroMount');
+  if (heroMount) heroMount.innerHTML = buildHeroHTML();
 
   _themePrefs = currentThemePrefs();
   document.getElementById('hdrThemePop').innerHTML = buildThemePopHTML();

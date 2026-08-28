@@ -32,32 +32,49 @@
 
 <div id="appHeaderMount"></div>
 
-<div class="shell">
-  <div class="view-tabs-row">
-    <div class="view-tabs" id="viewTabs">
-      <button data-status="all" class="active">All <span class="count" id="countAll"></span></button>
+<div class="rail-backdrop" id="railBackdrop"></div>
+
+<div class="shell-grid dash-shell" id="dashRoot">
+  <aside class="rail" id="rail" aria-label="Dashboard navigation">
+    <p class="rail-title">loewtorials</p>
+    <p class="rail-sub">Dashboard</p>
+    <button class="btn btn-primary btn-sm" id="newWizardBtn" style="width:100%; justify-content:center; margin-bottom:18px;">+ New wizard</button>
+
+    <nav class="dash-nav" id="viewTabs">
+      <button data-status="all" class="active">All wizards <span class="count" id="countAll"></span></button>
       <button data-status="active">Active <span class="count" id="countActive"></span></button>
       <button data-status="solved">Solved <span class="count" id="countSolved"></span></button>
       <button data-status="archived">Archived <span class="count" id="countArchived"></span></button>
+    </nav>
+
+    <div class="rail-divider"></div>
+    <p class="rail-title">Categories</p>
+    <nav class="dash-nav dash-nav-categories" id="categoryNav"></nav>
+  </aside>
+
+  <main class="stage dash-content">
+    <div id="appHeroMount"></div>
+
+    <div class="mobile-bar">
+      <button class="map-btn" id="openRail">&#9776; Menu</button>
     </div>
-    <button class="btn btn-primary new-wizard-btn" id="newWizardBtn">+ New wizard</button>
-  </div>
 
-  <div class="toolbar">
-    <input type="search" id="searchInput" placeholder="Search wizards, tags, descriptions&hellip;">
-    <select id="categorySelect"><option value="">All categories</option></select>
-    <select id="sortSelect">
-      <option value="name">Sort: Name</option>
-      <option value="date-desc">Sort: Newest first</option>
-      <option value="date-asc">Sort: Oldest first</option>
-      <option value="category">Sort: Category</option>
-    </select>
-    <button class="btn btn-ghost btn-sm" id="downloadLogBtn" title="Download the full activity log across all solved wizards">&darr; Activity log</button>
-  </div>
+    <div class="toolbar">
+      <input type="search" id="searchInput" placeholder="Search wizards, tags, descriptions&hellip;">
+      <select id="categorySelect"><option value="">All categories</option></select>
+      <select id="sortSelect">
+        <option value="name">Sort: Name</option>
+        <option value="date-desc">Sort: Newest first</option>
+        <option value="date-asc">Sort: Oldest first</option>
+        <option value="category">Sort: Category</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" id="downloadLogBtn" title="Download the full activity log across all solved wizards">&darr; Activity log</button>
+    </div>
 
-  <div class="wizard-grid" id="wizardGrid"></div>
+    <div class="wizard-grid" id="wizardGrid"></div>
 
-  <p class="tag" id="hiddenLink" style="display:none; margin-top:20px; cursor:pointer; width:fit-content;"></p>
+    <p class="tag" id="hiddenLink" style="display:none; margin-top:20px; cursor:pointer; width:fit-content;"></p>
+  </main>
 </div>
 
 <!-- ---------------- Add-wizard modal ---------------- -->

@@ -1,30 +1,9 @@
 /* ---------- layout ----------
-   The rail+stage grid is centered inside a --shell-max-width container
-   (same var the dashboard uses) instead of stretching the rail to the
-   left viewport edge while the stage centers independently within
-   whatever's left over — that combination is what used to leave a big,
-   uneven dead zone next to the content on wide screens. Centering the
-   whole grid, and pulling the stage's own left padding down to
-   --sidebar-gap (both user-adjustable in Settings), brings the rail and
-   content visually together without going edge-to-edge. */
-.app{
-  display:grid; grid-template-columns: 264px 1fr; min-height:100vh;
-  max-width: min(var(--shell-max-width), 98vw); margin:0 auto;
-}
-@media (max-width: 900px){ .app{ grid-template-columns: 1fr; max-width:none; } }
-
-/* ---------- rail ---------- */
-.rail{
-  border-right:1px solid var(--border);
-  background: color-mix(in srgb, var(--panel) 85%, transparent);
-  padding: 28px 16px 40px 22px;
-  position: sticky; top:var(--util-h); align-self:start; height:calc(100vh - var(--util-h)); overflow-y:auto;
-}
-.rail-title{
-  font-family:var(--f-mono); font-size:0.6875rem; letter-spacing:0.14em;
-  text-transform:uppercase; color:var(--tx-faint); margin:0 0 4px;
-}
-.rail-sub{ font-family:var(--f-display); font-size:1.0625rem; font-weight:600; margin:0 0 20px; color:var(--tx); }
+   The shared grid (.shell-grid), rail chrome (.rail, mobile toggle,
+   .stage padding) now live in styles.css so the dashboard can reuse the
+   same sidebar system — see that file for the shell-grid/rail rules.
+   What's left here is content specific to the wizard rail (groups,
+   ticks, diamonds, outcomes) and the wizard stage itself. */
 
 .group{ margin-bottom:6px; position:relative; padding-left:26px; }
 .group::before{ content:""; position:absolute; left:9px; top:22px; bottom:-6px; width:2px; background: var(--track); }
@@ -56,25 +35,8 @@
 .outcome-node{ font-family:var(--f-mono); font-size:0.71875rem; border:1px dashed var(--track); color:var(--tx-faint); border-radius:8px; padding:8px 10px; }
 .outcome-node.taken{ border-color:var(--a1); color:var(--a1); border-style:solid; box-shadow: inset 0 0 0 1px var(--a1-dim); }
 
-/* ---------- mobile rail toggle ---------- */
-.mobile-bar{ display:none; }
-@media (max-width: 900px){
-  .rail{ position: fixed; inset:0 auto 0 0; width: min(320px, 86vw); transform: translateX(-100%); transition: transform 0.25s ease; z-index: 40; box-shadow: 20px 0 40px rgba(0,0,0,0.4); }
-  .rail.open{ transform: translateX(0); }
-  .rail-backdrop{ display:none; position:fixed; inset:0; background:rgba(4,8,10,0.6); z-index:30; }
-  .rail-backdrop.open{ display:block; }
-  .mobile-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-bottom:1px solid var(--border); background: color-mix(in srgb, var(--panel) 90%, transparent); position:sticky; top:var(--util-h); z-index:20; }
-  .mobile-bar .progress{ flex:1; height:6px; border-radius:4px; background:var(--track); overflow:hidden; }
-  .mobile-bar .progress > span{ display:block; height:100%; background:var(--a1); }
-}
-.map-btn{ font-family:var(--f-mono); font-size:0.75rem; color:var(--surft); background:var(--surf); border:var(--border-w) solid var(--border); border-radius:var(--radius); padding:7px 12px; cursor:pointer; white-space:nowrap; }
-.map-btn:hover{ border-color:var(--a1); }
-
-/* ---------- stage ---------- */
-.stage{
-  padding: clamp(20px, 3vw, 44px) clamp(20px, 3vw, 44px) clamp(20px, 3vw, 44px) var(--sidebar-gap);
-  max-width:100%; margin:0; width:100%;
-}
+/* ---------- stage (wizard-specific prose width on top of the shared
+   .stage padding in styles.css) ---------- */
 /* Prose stays readable even when the shell/stage is set wide — cap the
    text-column width in `ch` (character-relative) units separately from
    the stage itself, so code blocks, cards, and checklists can still use

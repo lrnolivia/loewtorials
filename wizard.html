@@ -32,7 +32,7 @@
 
 <div class="rail-backdrop" id="railBackdrop"></div>
 
-<div class="app" id="wizardRoot">
+<div class="shell-grid app" id="wizardRoot">
   <aside class="rail" id="rail" aria-label="Wizard map">
     <p class="rail-title" id="railTitle">Wizard</p>
     <p class="rail-sub" id="railSub">Loading&hellip;</p>
@@ -41,6 +41,8 @@
   </aside>
 
   <main class="stage">
+    <div id="appHeroMount"></div>
+
     <div class="mobile-bar">
       <button class="map-btn" id="openRail">&#9776; Map</button>
       <div class="progress"><span data-w="mobileProgress" style="width:0%"></span></div>
