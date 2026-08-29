@@ -367,8 +367,25 @@ function wireIconButtons() {
     else location.href = 'index.html';
   });
 
+  // Threshold uses hysteresis (collapse past 70, only re-expand once back
+  // under 40) rather than one fixed number — a single threshold fights
+  // with CSS scroll anchoring: collapsing .app-hero/.specs-bar-wrap
+  // removes ~260px of content above .stage-top, and on a wizard step
+  // short enough that 70px of scroll is close to the page's entire
+  // scroll range, the browser's anchoring compensates for that shrink by
+  // adjusting scrollY back down past 70, which re-expands the hero,
+  // regrows the page, and lets scrollY drift past 70 again — an infinite
+  // collapse/expand/collapse loop that made goTo()'s scrollIntoView never
+  // settle (see wizard-engine.js). The gap between the two numbers is
+  // the fix: once collapsed, ordinary anchoring jitter of a few px can't
+  // cross back over 40 and re-trigger the loop. Belt-and-suspenders with
+  // the `overflow-anchor:none` on .app-hero/.specs-bar-wrap in
+  // styles.css, which stops anchoring from compensating for their
+  // resize at all.
   window.addEventListener('scroll', () => {
-    document.body.classList.toggle('scrolled', window.scrollY > 70);
+    const y = window.scrollY;
+    if (y > 70) document.body.classList.add('scrolled');
+    else if (y < 40) document.body.classList.remove('scrolled');
   }, { passive: true });
 }
 

@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>loewtorials</title>
+<!-- Toolbox favicon, forced with a cache-busting version query on the
+     file-based links so a previously cached/blank favicon (including one
+     a browser or the domain cached before this was added) doesn't stick
+     around — bump ?v= if the icon ever changes again. The inline SVG
+     data URI is listed first and has no URL at all, so it can't be
+     served stale from any cache; it's what most modern browsers actually
+     use. rel="icon" is repeated with type="image/x-icon" and
+     rel="shortcut icon" for older browsers that only recognize those. -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50%25' y='54%25' dominant-baseline='central' text-anchor='middle' font-size='90'%3E%F0%9F%A7%B0%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="favicon.png?v=1">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=1">
+<link rel="shortcut icon" href="favicon.ico?v=1">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Sora:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600&family=Space+Grotesk:wght@600;700;800&family=Space+Mono:wght@400;700&family=Fraunces:opsz,wght@9..144,600;9..144,900&family=Playfair+Display:wght@700;800;900&family=IBM+Plex+Mono:wght@500;600&family=Work+Sans:wght@500;600&family=Inter:wght@500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Lora:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/styles.css">
@@ -135,11 +148,11 @@
       const root = document.getElementById('wizardRoot');
       const profile = Storage.getProfile();
 
-      // ---- which view: ?view= param (one-time) > saved per-wizard default > this wizard's own suggestion > 'wizard' ----
+      // ---- which view: ?view= param (one-time) > saved per-wizard default > this wizard's own suggestion > 'article' ----
       const queryView = params.get('view');
       const savedDefault = (Storage.getOverrides()[id] || {}).defaultView || wizard.defaultView;
-      let mode = (queryView === 'article' || queryView === 'wizard') ? queryView : (savedDefault || wizard.suggestedView || 'wizard');
-      if (mode !== 'article' && mode !== 'wizard') mode = 'wizard';
+      let mode = (queryView === 'article' || queryView === 'wizard') ? queryView : (savedDefault || wizard.suggestedView || 'article');
+      if (mode !== 'article' && mode !== 'wizard') mode = 'article';
       const savedDefaultRef = { value: savedDefault };
 
       const toggleRow = document.getElementById('viewToggleRow');

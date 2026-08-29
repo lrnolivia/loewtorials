@@ -15,13 +15,21 @@
 // One entry per color theme. Each has a `light` and `dark` half (the
 // neutral bg/panel/surf/border/tx set) and a shared accent set that
 // doesn't change with mode. `card`/`cardt` default to a2/a2t but are
-// always independently customizable (see CUSTOMIZE_ROWS in settings.js)
+// always independently customizable (see CUSTOMIZE_ROWS in header.js)
 // — every family gets its own card row now, not just the ones that
 // happen to ship a non-default card color.
 const FAMILIES = {
   cream: {
     label: 'Cream',
     a1: '#FFD23F', a1t: '#1C1B17',
+    // a1 itself is tuned as a *fill* color (paired with a1t drawn on top
+    // of it) — as text drawn directly on a light neutral (bg/panel/surf)
+    // it measures well under WCAG AA (~1.3:1 against this family's
+    // surf). a1TextLight is a separate, deliberately darker branch of
+    // the same hue for that use, applied only in light mode — see
+    // resolveFamilyTokens's `a1-text` token below.
+    a1TextLight: '#725700',
+    cardAccentText: '#594300',
     a2: '#7FE0E8', a2t: '#1C1B17',
     a3: '#FF5B49', a3t: '#1C1B17',
     light: { bg: '#EDE3C8', panel: '#E3D5AE', surf: '#FAF6EA', surft: '#1C1B17', border: '#1C1B17', tx: '#1C1B17' },
@@ -30,6 +38,8 @@ const FAMILIES = {
   'neon-cobalt': {
     label: 'Neon Cobalt',
     a1: '#C6FF29', a1t: '#0A0A14',
+    a1TextLight: '#435C00',
+    cardAccentText: '#C6FF29',
     a2: '#FF2EC4', a2t: '#0A0A14',
     a3: '#22E5FF', a3t: '#0A0A14',
     card: '#2A2AF5', cardt: '#F5F5FF',
@@ -39,14 +49,19 @@ const FAMILIES = {
   greige: {
     label: 'Greige',
     a1: '#C79B4B', a1t: '#2B2924',
+    a1TextLight: '#664C1D',
+    cardAccentText: '#211E1A',
     a2: '#7C8C74', a2t: '#2B2924',
     a3: '#B5654F', a3t: '#F7F1EC', // takes light text, not dark
+    cardt: '#211E1A',
     light: { bg: '#DAD4C8', panel: '#C9C2B2', surf: '#EFEBE2', surft: '#2B2924', border: '#2B2924', tx: '#2B2924' },
     dark:  { bg: '#211E1A', panel: '#2E2A24', surf: '#3B362E', surft: '#EDE7DC', border: '#EDE7DC', tx: '#EDE7DC' }
   },
   mono: {
     label: 'Mono',
     a1: '#C9C4BB', a1t: '#221F1C',
+    a1TextLight: '#5C5548',
+    cardAccentText: '#221F1C',
     a2: '#9C968C', a2t: '#221F1C',
     a3: '#4A453E', a3t: '#F3F1EC', // the dark chip — light text
     light: { bg: '#DEDAD3', panel: '#CFCAC1', surf: '#F1EEE9', surft: '#221F1C', border: '#221F1C', tx: '#221F1C' },
@@ -64,13 +79,9 @@ const DEFAULT_FONTS = {
 };
 
 // A single utility accent for destructive actions (delete, danger
-// button, error states) plus the always-dark/always-light chip pair
-// dopamine's spec pills use (see styles.css) — both sit outside the
-// 16-combination system on purpose, so they read consistently no
-// matter which of the 4 palettes or 2 modes is active.
+// button, error states) sits outside the 16-combination system so it
+// reads consistently no matter which palette or mode is active.
 const MODE_DANGER = { light: '#B7362A', dark: '#E2685A' };
-const CHIP_DARK = '#1A1A1E';
-const CHIP_DARK_T = '#F4F4F2';
 
 // A clean, curated set of display/body fonts — a sans-serif and a
 // serif option in each, plus a couple of alternates — for the
@@ -102,7 +113,7 @@ const FONT_ALTERNATES = {
   ]
 };
 
-const THEME_TOKEN_KEYS = ['bg', 'panel', 'surf', 'surft', 'border', 'tx', 'a1', 'a1t', 'a2', 'a2t', 'a3', 'a3t', 'card', 'cardt'];
+const THEME_TOKEN_KEYS = ['bg', 'panel', 'surf', 'surft', 'border', 'tx', 'a1', 'a1t', 'a1-text', 'card-accent-text', 'a2', 'a2t', 'a3', 'a3t', 'card', 'cardt'];
 
 const DEFAULT_THEME_PREFS = {
   style: 'brutal',      // 'brutal' | 'dopamine'
@@ -121,8 +132,16 @@ function resolveFamilyTokens(themeId, mode) {
   const neutrals = fam[mode] || fam.light;
   const card = fam.card || fam.a2;
   const cardt = fam.cardt || fam.a2t;
+  // a1 used as a *fill* (buttons, badges, done-state dots) always uses
+  // the punchy a1 value with a1t drawn on top of it. a1 used as *text*
+  // color directly on a light neutral is a different case — in light
+  // mode, swap in each family's darker a1TextLight branch instead (see
+  // FAMILIES above); in dark mode the plain a1 already reads fine
+  // against every family's dark neutrals, so no branch is needed there.
+  const a1Text = mode === 'light' ? (fam.a1TextLight || fam.a1) : fam.a1;
   return Object.assign({}, neutrals, {
-    a1: fam.a1, a1t: fam.a1t,
+    a1: fam.a1, a1t: fam.a1t, 'a1-text': a1Text,
+    'card-accent-text': fam.cardAccentText || a1Text,
     a2: fam.a2, a2t: fam.a2t,
     a3: fam.a3, a3t: fam.a3t,
     card, cardt
@@ -157,8 +176,6 @@ function applyTheme(rawPrefs) {
   root.style.setProperty('--f-body', fonts.body);
   root.style.setProperty('--f-mono', fonts.mono);
   root.style.setProperty('--danger', MODE_DANGER[prefs.mode] || MODE_DANGER.light);
-  root.style.setProperty('--chip-dark', CHIP_DARK);
-  root.style.setProperty('--chip-dark-t', CHIP_DARK_T);
 
   root.dataset.style = prefs.style;
   root.dataset.theme = prefs.theme;

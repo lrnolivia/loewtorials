@@ -7,6 +7,10 @@
 
 const BACKGROUND_OPTIONS = [
   { id: 'grid', label: 'Dot grid (default)' },
+  { id: 'graph', label: 'Graph paper' },
+  { id: 'diagonal', label: 'Diagonal hatch' },
+  { id: 'glow', label: 'Accent glow' },
+  { id: 'rings', label: 'Topographic rings' },
   { id: 'solid', label: 'Solid' },
   { id: 'none', label: 'None' },
   { id: 'custom', label: 'Custom image' }
@@ -23,11 +27,43 @@ const DEFAULT_SETTINGS = {
 function applyBackground(settings) {
   const body = document.body;
   if (!body) return;
+
+  // Reset every inline background property first so switching between
+  // variants cannot leave a previous option's size/position/attachment
+  // behind. The dot-grid default intentionally falls back to styles.css.
+  body.style.backgroundImage = '';
+  body.style.backgroundSize = '';
+  body.style.backgroundPosition = '';
+  body.style.backgroundRepeat = '';
+  body.style.backgroundColor = '';
+  body.style.backgroundAttachment = '';
+
   if (settings.background === 'solid') {
     body.style.backgroundImage = 'none';
     body.style.backgroundColor = 'var(--bg)';
   } else if (settings.background === 'none') {
     body.style.backgroundImage = 'none';
+    body.style.backgroundColor = 'var(--bg)';
+  } else if (settings.background === 'graph') {
+    body.style.backgroundImage = 'linear-gradient(color-mix(in srgb, var(--border) 10%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--border) 10%, transparent) 1px, transparent 1px)';
+    body.style.backgroundSize = '28px 28px';
+    body.style.backgroundRepeat = 'repeat';
+    body.style.backgroundColor = 'var(--bg)';
+  } else if (settings.background === 'diagonal') {
+    body.style.backgroundImage = 'repeating-linear-gradient(135deg, color-mix(in srgb, var(--a1) 11%, transparent) 0 1px, transparent 1px 16px)';
+    body.style.backgroundSize = 'auto';
+    body.style.backgroundRepeat = 'repeat';
+    body.style.backgroundColor = 'var(--bg)';
+  } else if (settings.background === 'glow') {
+    body.style.backgroundImage = 'radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--a2) 28%, transparent), transparent 34%), radial-gradient(circle at 88% 22%, color-mix(in srgb, var(--a3) 20%, transparent), transparent 30%), radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--a1) 18%, transparent), transparent 38%)';
+    body.style.backgroundSize = 'auto';
+    body.style.backgroundRepeat = 'no-repeat';
+    body.style.backgroundColor = 'var(--bg)';
+    body.style.backgroundAttachment = 'fixed';
+  } else if (settings.background === 'rings') {
+    body.style.backgroundImage = 'repeating-radial-gradient(circle at 10% 0%, transparent 0 18px, color-mix(in srgb, var(--border) 9%, transparent) 19px 20px)';
+    body.style.backgroundSize = 'auto';
+    body.style.backgroundRepeat = 'repeat';
     body.style.backgroundColor = 'var(--bg)';
   } else if (settings.background === 'custom' && settings.backgroundImage) {
     body.style.backgroundImage = 'linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.55)), url(' + settings.backgroundImage + ')';
@@ -35,14 +71,6 @@ function applyBackground(settings) {
     body.style.backgroundPosition = 'center';
     body.style.backgroundRepeat = 'no-repeat';
     body.style.backgroundAttachment = 'fixed';
-  } else {
-    // grid (default) — clear inline overrides so the CSS default shows.
-    body.style.backgroundImage = '';
-    body.style.backgroundSize = '';
-    body.style.backgroundPosition = '';
-    body.style.backgroundRepeat = '';
-    body.style.backgroundColor = '';
-    body.style.backgroundAttachment = '';
   }
 }
 

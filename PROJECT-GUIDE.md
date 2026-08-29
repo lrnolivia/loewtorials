@@ -39,14 +39,26 @@ assets/
                           completions CRUD + getAllCompletionsFlat,
                           profile specs/containerfile getters/setters,
                           exportAll/importAll, downloadText.
-                          getAllWizardMeta() merges localStorage
-                          `overrides` onto manifest/custom data via
-                          Object.assign — a new per-wizard flag (like
-                          status: solved/archived) needs zero
-                          storage.js changes, just show up on the
-                          merged object.
+                          getAllWizardMeta()/getHiddenWizardMeta()/
+                          getEveryWizardMeta() all share one private
+                          merge (_mergeWizardMeta) of manifest + custom
+                          + localStorage `overrides` — each entry always
+                          carries a real `hidden` boolean, the three
+                          getters just filter that shared list
+                          differently (visible-only / hidden-only /
+                          everything, for the Manage screen). A new
+                          per-wizard flag (like status: solved/archived)
+                          needs zero storage.js changes beyond that
+                          shared merge, just shows up on the merged
+                          object. deleteCustomWizard(id) removes a
+                          custom wizard + its override; only
+                          custom/custom-override sourced wizards are
+                          deletable, gated in dashboard.js's `deletable`
+                          check, not here.
   settings.js               theme presets, curated Google Fonts,
-                          background variants (grid/solid/none/custom
+                          background variants (dot grid/graph paper/
+                          diagonal hatch/accent glow/topographic rings/
+                          solid/none/custom
                           image — applied via INLINE STYLES on <body>
                           from applyBackground(), not CSS classes — new
                           variants add a branch there, not new CSS),
@@ -70,8 +82,18 @@ assets/
                           the last-parsed Containerfile.
   dashboard.js               calls bootAppearance() first, mounts
                           gear + spec card, wires view tabs/status
-                          filter, archive/unarchive/hide/delete/export
-                          card-menu actions, activity-log download
+                          filter, archive/unarchive/hide/unhide/delete/
+                          export card-menu actions (handleCardAction),
+                          activity-log download, edit-details modal
+                          (metadata only — title/category/tags/date via
+                          Storage.setOverride, never touches a wizard's
+                          steps/content), and the Manage-wizards modal
+                          (renderManageList) which reuses
+                          handleCardAction for every row's buttons so
+                          there's exactly one place each action is
+                          implemented — the modal just re-renders itself
+                          after each click since handleCardAction's own
+                          refresh() only repaints the main grid.
   md-parser.js               turns wizard Markdown into wizard JSON.
                           Frontmatter has a hardcoded field allowlist
                           copied onto the wizard object — a new
@@ -176,7 +198,15 @@ a pre-fill, not a commitment.
 
 ## State of the project
 
-Everything in the original handoff's priority list is done:
+Everything in the original handoff's priority list is done, including the
+sticky-header/guided-scroll fixes and the wizard delete+manage round from
+`HANDOFF.md`:
+
+- Wizard pages now fall back to Article view (while still respecting a
+  query-string override, saved per-wizard default, or author suggestion),
+  and article rail links land below the sticky utility bar. Appearance
+  settings now include four additional theme-aware backgrounds: graph
+  paper, diagonal hatch, accent glow, and topographic rings.
 
 - Fixed: `relevantPackages` frontmatter field was being silently dropped
   by the parser (missing from the field allowlist + list-field branch).
@@ -184,15 +214,44 @@ Everything in the original handoff's priority list is done:
   Documented as wizard-level-only in `templates/wizard-spec.md` (no
   per-step syntax was ever implemented, and the stated use case doesn't
   need one).
+- Sticky header (`.app-header`/`#appHeaderMount` → `display:contents` so
+  `.utility`'s containing block is `<body>`) and guided-view scroll
+  (`goTo()` targets `.stage-top`, which plus `.step-card` carries
+  `scroll-margin-top: var(--util-h)`) — both re-verified via headless
+  Chromium: header `rect.top` stays pinned at `0` through a 600px scroll,
+  and `.stage-top` lands below the sticky bar (not hidden behind or above
+  it) after stepping through branches.
+- Wizard delete + manage, the item `HANDOFF.md` listed as "not started":
+  `Storage.deleteCustomWizard(id)` already existed and works correctly
+  (verified: removes the wizard, its override, and the card disappears
+  from the grid); the per-card ⋮ menu already covered edit/archive/hide/
+  export/delete. Added on top: a **Manage wizards** button (sidebar, next
+  to "+ New wizard") opening a modal that lists every wizard at once —
+  including hidden and archived ones the main grid never shows
+  together — with its own search + status filter and the same actions
+  per row. It's built on `Storage.getEveryWizardMeta()` (new; shares the
+  same merge as `getAllWizardMeta`/`getHiddenWizardMeta`, just unfiltered)
+  and calls the existing `handleCardAction()` for every button so there's
+  one implementation per action, not two. Also added: an `unhide` action
+  (previously only "unhide all" existed, via the hidden-count link below
+  the grid). Verified via Playwright: seeding hidden/archived custom
+  wizards, filtering the Manage list by each status, unhide and delete
+  from a Manage row (both reflected immediately in the main grid), and
+  editing from a Manage row (the edit-details modal stacks correctly on
+  top of the Manage modal and the Manage list re-renders on save).
+  Editing intentionally stayed a dedicated modal rather than reusing the
+  multi-upload review pane — functionally identical (title/category/
+  tags/date only, content untouched either way) with less duplicated
+  markup.
 - Verified via Playwright: dashboard load, settings (theme/font/
   background/sliders), custom-wizard upload, system profile +
   Containerfile parsing, wizard player rendering (rail, checklist,
-  code-copy, branch, outcomes), the new mark-solved review flow
-  (defaults, status flip reveals note field, import pre-fills and
-  correctly handles negation, save downloads a correct `.md`, dashboard
-  shows the solved badge), activity-log download, view-tab filtering
-  (All/Active/Solved/Archived), and card-menu actions (archive, unarchive,
-  hide/unhide, export JSON) — all clean, zero console errors beyond the
+  code-copy, branch, outcomes), the mark-solved review flow (defaults,
+  status flip reveals note field, import pre-fills and correctly handles
+  negation, save downloads a correct `.md`, dashboard shows the solved
+  badge), activity-log download, view-tab filtering (All/Active/Solved/
+  Archived), and card-menu actions (archive, unarchive, hide/unhide,
+  export JSON, delete) — all clean, zero console errors beyond the
   expected fonts.googleapis.com 403 from sandboxed network egress.
 - Authored the `tour` wizard (`wizards-src/tour.md` → `wizards/tour.json`)
   covering what a wizard is, groups/steps/branches/outcomes, the
@@ -200,16 +259,16 @@ Everything in the original handoff's priority list is done:
   activity log, and appearance settings. Registered in
   `wizards/manifest.json`.
 - `README.md`'s stale `dirty-ntfs.json` references replaced with the real
-  `tour.json`/`tour` wizard.
+  `tour.json`/`tour` wizard; README now also documents Delete and Manage
+  wizards.
 
 Not yet done (deliberately deferred, low priority, don't build
-speculatively — let the user pick):
-full-text step search, one-shot export/import UI polish (the backend
-already exists via `Storage.exportAll()`/`importAll()` — check whether
-the settings-modal backup buttons are enough or a dashboard
-restore-on-load flow is worth adding), keyboard shortcuts in the wizard
-player, related-wizards suggestions, print/PDF view of a completed
-wizard, and "delete" on a custom wizard card wasn't explicitly
-re-verified in this pass (archive/unarchive/hide/export all were) since
-it's destructive and low-risk/self-explanatory — worth a quick check
-before relying on it if it becomes relevant.
+speculatively — let the user pick): full-text step search, one-shot
+export/import UI polish (the backend already exists via
+`Storage.exportAll()`/`importAll()` — check whether the settings-modal
+backup buttons are enough or a dashboard restore-on-load flow is worth
+adding), keyboard shortcuts in the wizard player, related-wizards
+suggestions, print/PDF view of a completed wizard, and bulk actions
+(select multiple rows in Manage and archive/delete/hide together) —
+current Manage screen is one row at a time by design, worth adding only
+if managing wizards one-by-one turns out to be too slow in practice.

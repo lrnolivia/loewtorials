@@ -206,6 +206,7 @@
     if (action === 'archive') { Storage.setOverride(id, { status: 'archived' }); showToast('Archived.'); refresh(); }
     if (action === 'unarchive') { Storage.setOverride(id, { status: 'active' }); showToast('Restored to active.'); refresh(); }
     if (action === 'hide') { Storage.setOverride(id, { hidden: true }); showToast('Hidden. You can restore it from "Manage hidden wizards" below the grid.'); refresh(); renderHiddenLink(); }
+    if (action === 'unhide') { Storage.setOverride(id, { hidden: false }); showToast('Restored to dashboard.'); refresh(); renderHiddenLink(); }
     if (action === 'delete') {
       if (confirm(`Delete "${meta.title}"? This only removes it from this device — it can't be undone here.`)) {
         Storage.deleteCustomWizard(id);
@@ -252,6 +253,91 @@
     }
   });
 
+  // ---------------- manage-wizards modal ----------------
+  // A bulk-triage view alongside the per-card ⋮ menu: it lists every
+  // wizard at once (including hidden/archived, which the main grid never
+  // shows together) with the same actions, so you don't have to filter
+  // the grid over and over to find the one you want to touch.
+  const manageModal = document.getElementById('manageModal');
+  const manageList = document.getElementById('manageList');
+  const manageSearchInput = document.getElementById('manageSearchInput');
+  const manageStatusSelect = document.getElementById('manageStatusSelect');
+
+  document.getElementById('manageWizardsBtn').addEventListener('click', () => {
+    manageModal.classList.remove('hidden');
+    manageSearchInput.value = '';
+    manageStatusSelect.value = 'all';
+    renderManageList();
+  });
+  document.getElementById('manageModalClose').addEventListener('click', () => manageModal.classList.add('hidden'));
+  manageModal.addEventListener('click', e => { if (e.target === manageModal) manageModal.classList.add('hidden'); });
+  manageSearchInput.addEventListener('input', renderManageList);
+  manageStatusSelect.addEventListener('change', renderManageList);
+
+  function manageRowHtml(w) {
+    const deletable = w.source === 'custom' || w.source === 'custom-override';
+    const sourceLabel = w.source === 'builtin' ? 'Built-in' : 'Custom';
+    const statusBadge = w.status === 'solved' ? `<span class="status-badge solved">Solved</span>`
+      : w.status === 'archived' ? `<span class="status-badge archived">Archived</span>` : '';
+    const hiddenBadge = w.hidden ? `<span class="status-badge hidden-badge">Hidden</span>` : '';
+    const archiveAction = w.status === 'archived'
+      ? `<button class="btn btn-ghost btn-sm" data-maction="unarchive" data-id="${escapeHtml(w.id)}">Restore to active</button>`
+      : `<button class="btn btn-ghost btn-sm" data-maction="archive" data-id="${escapeHtml(w.id)}">Archive</button>`;
+    const hideAction = w.hidden
+      ? `<button class="btn btn-ghost btn-sm" data-maction="unhide" data-id="${escapeHtml(w.id)}">Unhide</button>`
+      : `<button class="btn btn-ghost btn-sm" data-maction="hide" data-id="${escapeHtml(w.id)}">Hide</button>`;
+    return `
+    <div class="manage-row" data-id="${escapeHtml(w.id)}">
+      <div class="manage-row-main">
+        <h4>${escapeHtml(w.title)}</h4>
+        <div class="manage-row-badges">
+          <span class="badge">${escapeHtml(w.category || 'Uncategorized')}</span>
+          ${w.kind === 'article' ? '<span class="badge">Article</span>' : ''}
+          ${statusBadge}
+          ${hiddenBadge}
+        </div>
+        <div class="manage-row-meta">${sourceLabel}${w.date ? ' \u00b7 ' + escapeHtml(w.date) : ''}</div>
+      </div>
+      <div class="manage-row-actions">
+        <button class="btn btn-ghost btn-sm" data-maction="edit" data-id="${escapeHtml(w.id)}">Edit details</button>
+        ${archiveAction}
+        ${hideAction}
+        <button class="btn btn-ghost btn-sm" data-maction="export" data-id="${escapeHtml(w.id)}">Export JSON</button>
+        ${w._hasSource ? `<button class="btn btn-ghost btn-sm" data-maction="source" data-id="${escapeHtml(w.id)}">Source .md</button>` : ''}
+        ${deletable ? `<button class="btn btn-ghost btn-sm" data-maction="delete" data-id="${escapeHtml(w.id)}" style="color:var(--danger);">Delete</button>` : ''}
+      </div>
+    </div>`;
+  }
+
+  function renderManageList() {
+    const q = manageSearchInput.value.trim().toLowerCase();
+    const statusVal = manageStatusSelect.value;
+    let list = Storage.getEveryWizardMeta(manifestWizards);
+    list = list.filter(w => {
+      if (statusVal === 'hidden') return w.hidden;
+      if (w.hidden && statusVal !== 'all') return false; // hidden wizards only show under "All" or "Hidden"
+      if (statusVal === 'active') return !w.status || w.status === 'active';
+      if (statusVal === 'solved' || statusVal === 'archived') return w.status === statusVal;
+      return true; // 'all'
+    });
+    if (q) {
+      list = list.filter(w => {
+        const hay = [w.title, w.category, (w.tags || []).join(' ')].join(' ').toLowerCase();
+        return hay.includes(q);
+      });
+    }
+    list.sort((a, b) => a.title.localeCompare(b.title));
+    manageList.innerHTML = list.length
+      ? list.map(manageRowHtml).join('')
+      : `<div class="manage-empty">No wizards match that filter.</div>`;
+    manageList.querySelectorAll('[data-maction]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        handleCardAction(btn.getAttribute('data-maction'), btn.getAttribute('data-id'));
+        renderManageList();
+      });
+    });
+  }
+
   // ---------------- edit modal ----------------
   const editModal = document.getElementById('editModal');
   let editingId = null;
@@ -274,6 +360,7 @@
     Storage.setOverride(editingId, { title, category, tags, date });
     editModal.classList.add('hidden');
     refresh();
+    if (!manageModal.classList.contains('hidden')) renderManageList();
     showToast('Saved.');
   });
 
@@ -501,13 +588,16 @@
     refresh();
   });
 
-  // patch getAllWizardMeta results with a _hasSource flag for the menu
-  const originalGetAllWizardMeta = Storage.getAllWizardMeta;
-  Storage.getAllWizardMeta = function (manifest) {
-    const list = originalGetAllWizardMeta(manifest);
+  // patch getAllWizardMeta/getEveryWizardMeta results with a _hasSource
+  // flag for the card/manage-row menus
+  function withHasSource(list) {
     const custom = Storage.getCustomWizards();
     return list.map(w => Object.assign({}, w, { _hasSource: !!(custom[w.id] && custom[w.id]._sourceMarkdown) }));
-  };
+  }
+  const originalGetAllWizardMeta = Storage.getAllWizardMeta;
+  Storage.getAllWizardMeta = function (manifest) { return withHasSource(originalGetAllWizardMeta(manifest)); };
+  const originalGetEveryWizardMeta = Storage.getEveryWizardMeta;
+  Storage.getEveryWizardMeta = function (manifest) { return withHasSource(originalGetEveryWizardMeta(manifest)); };
 
   // ---------------- "get a wizard written" panel ----------------
   const STARTER_PROMPT = "I've attached loewtorials' wizard-authoring spec (wizard-spec.md). Please write a new wizard in that exact Markdown format for the following topic — ask me anything you need first: \n\n[describe the process/decision-tree/troubleshooting flow you want turned into a wizard]";

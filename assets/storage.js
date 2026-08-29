@@ -103,8 +103,12 @@ const Storage = {
   },
 
   // Merge manifest (built-in) + custom wizards + overrides into one flat
-  // list of card metadata for the dashboard.
-  getAllWizardMeta(manifestWizards) {
+  // list of card metadata — the shared base for getAllWizardMeta (visible
+  // only), getHiddenWizardMeta (hidden only), and getEveryWizardMeta (both,
+  // for the Manage screen). Every entry carries a real `hidden` boolean
+  // (from its override, if any) so callers can filter without re-deriving
+  // the merge themselves.
+  _mergeWizardMeta(manifestWizards) {
     const overrides = Storage.getOverrides();
     const custom = Storage.getCustomWizards();
     const seen = new Set();
@@ -113,7 +117,7 @@ const Storage = {
     (manifestWizards || []).forEach(w => {
       seen.add(w.id);
       const ov = overrides[w.id] || {};
-      out.push(Object.assign({}, w, ov, { source: 'builtin' }));
+      out.push(Object.assign({}, w, ov, { source: 'builtin', hidden: !!ov.hidden }));
     });
 
     Object.keys(custom).forEach(id => {
@@ -131,7 +135,8 @@ const Storage = {
         kind: w.kind || 'wizard',
         confidence: w.confidence,
         source: 'custom',
-        ...ov
+        ...ov,
+        hidden: !!ov.hidden
       });
     });
 
@@ -147,18 +152,26 @@ const Storage = {
         category: w.category || out[idx].category, tags: w.tags || out[idx].tags,
         date: w.date || w._addedAt || out[idx].date,
         source: 'custom-override'
-      }, ov);
+      }, ov, { hidden: !!ov.hidden });
     });
 
-    return out.filter(w => !w.hidden);
+    return out;
+  },
+
+  getAllWizardMeta(manifestWizards) {
+    return Storage._mergeWizardMeta(manifestWizards).filter(w => !w.hidden);
   },
 
   getHiddenWizardMeta(manifestWizards) {
-    const overrides = Storage.getOverrides();
-    const custom = Storage.getCustomWizards();
-    const all = (manifestWizards || []).map(w => Object.assign({}, w, { source: 'builtin' }))
-      .concat(Object.keys(custom).map(id => Object.assign({}, custom[id], { source: 'custom' })));
-    return all.filter(w => overrides[w.id] && overrides[w.id].hidden);
+    return Storage._mergeWizardMeta(manifestWizards).filter(w => w.hidden);
+  },
+
+  // Every wizard regardless of hidden/archived/solved status, fully merged
+  // with overrides — used by the dashboard's "Manage wizards" screen, which
+  // (unlike the main grid) needs hidden and archived wizards visible at the
+  // same time so they can be triaged from one list.
+  getEveryWizardMeta(manifestWizards) {
+    return Storage._mergeWizardMeta(manifestWizards);
   },
 
   async loadWizardData(id, manifestWizards) {

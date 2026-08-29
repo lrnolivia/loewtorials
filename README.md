@@ -53,15 +53,14 @@ There are two ways a wizard gets onto the dashboard:
    file in `wizards/`. These ship with the site and are visible to everyone
    who loads it.
 2. **Custom (uploaded)** — parsed client-side from a `.md` file via the "+
-   New wizard" button and saved into the browser's `localStorage` on
-   whatever device you uploaded it from. Nothing is sent anywhere.
+   New wizard" button and saved into the browser's `localStorage`. When
+   cross-device sync is configured, that local data is also copied to the
+   site's private Cloudflare KV record.
 
-Custom wizards are per-device/per-browser by design (this is a static site
-with no server to store things centrally). If you want a wizard uploaded on
-your phone to show up everywhere, use the card's **Export JSON** action,
-drop the resulting file into `wizards/`, add an entry to
-`wizards/manifest.json`, and redeploy. At that point it's a built-in
-wizard, permanent for anyone who loads the site.
+Without sync, custom wizards are per-device/per-browser. With sync enabled,
+they follow the site password across devices. To make a wizard part of the
+deployed site itself, use the card's **Export JSON** action, drop the result
+into `wizards/`, add it to `wizards/manifest.json`, and redeploy.
 
 The tour wizard is included as a built-in, but it's manageable like any
 other card — rename it, edit its category/tags/date, hide it, or export its
@@ -69,6 +68,30 @@ JSON, all from the card's menu (⋮ → Edit details). If you want to fully
 rewrite its content, upload a new `.md` with `id: tour` in the frontmatter;
 a custom upload with the same id shadows the built-in one everywhere in
 the UI.
+
+Every wizard also has a **Delete** option in that same menu (custom/
+uploaded wizards only — built-ins can be hidden or archived but not
+deleted, since there's no server-side file to remove). Deleting only
+affects this device/browser and can't be undone from the UI.
+
+For touching several wizards at once — including hidden or archived ones,
+which the main grid deliberately doesn't show alongside active ones — use
+the **Manage wizards** button in the sidebar. It lists every wizard with
+the same actions (edit, archive/restore, hide/unhide, export, delete) plus
+its own search and status filter, so you don't have to change the main
+grid's filters just to find something you archived or hid a while ago.
+
+## Reading and appearance
+
+Wizards open in **Article** view by default: the whole guide is visible as
+one read-through, and the sidebar links jump directly to sections. Switch
+to **Guided** at any time for one-step-at-a-time navigation; either view can
+be saved as that wizard's default.
+
+The paintbrush menu controls style, palette, light/dark mode, corners, and
+fonts. The gear menu controls layout and backgrounds, including dot grid,
+graph paper, diagonal hatch, accent glow, topographic rings, solid, none,
+and a custom image.
 
 ## Wizards linking to other wizards
 
