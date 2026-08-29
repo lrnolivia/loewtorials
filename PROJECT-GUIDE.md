@@ -80,6 +80,13 @@ assets/
                           (wizard-level only is actually implemented —
                           there is no per-step frontmatter syntax) against
                           the last-parsed Containerfile.
+  motion.js                 shared motion runtime: staggered one-time
+                          reveals, guided-step swaps, visibility-aware
+                          ambient motion, and context-aware mandatory
+                          page snap (Article sections on every viewport;
+                          dashboard cards only in a one-column grid).
+                          Motion tokens/CSS live in styles.css and follow
+                          animation-guide/motion-guide-for-claude.md.
   dashboard.js               calls bootAppearance() first, mounts
                           gear + spec card, wires view tabs/status
                           filter, archive/unarchive/hide/unhide/delete/

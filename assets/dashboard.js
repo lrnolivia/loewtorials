@@ -151,6 +151,7 @@
     });
     grid.querySelectorAll('.wizard-card').forEach(card => {
       card.addEventListener('click', () => {
+        card.classList.add('is-opening');
         window.location.href = 'wizard.html?id=' + encodeURIComponent(card.getAttribute('data-id'));
       });
     });

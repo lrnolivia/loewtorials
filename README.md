@@ -86,7 +86,10 @@ grid's filters just to find something you archived or hid a while ago.
 Wizards open in **Article** view by default: the whole guide is visible as
 one read-through, and the sidebar links jump directly to sections. Switch
 to **Guided** at any time for one-step-at-a-time navigation; either view can
-be saved as that wizard's default.
+be saved as that wizard's default. Article sections use mandatory native
+scroll snap so each section settles below the sticky navigation. Dashboard
+cards use the same behavior when the responsive grid becomes one column;
+multi-column grids and Guided mode keep normal document scrolling.
 
 The paintbrush menu controls style, palette, light/dark mode, corners, and
 fonts. The gear menu controls layout and backgrounds, including dot grid,

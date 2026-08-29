@@ -162,7 +162,7 @@ function createWizardEngine(rootEl, wizard, opts) {
       const order = stepOrder();
       const idx = order.indexOf(currentId);
       const pct = idx >= 0 ? Math.round(((idx + 1) / order.length) * 100) : 0;
-      mobileProgressEl.style.width = pct + '%';
+      mobileProgressEl.style.transform = 'scaleX(' + (pct / 100) + ')';
     }
   }
 
@@ -255,6 +255,7 @@ function createWizardEngine(rootEl, wizard, opts) {
     html += `</div>`;
 
     cardEl.innerHTML = html;
+    if (window.Motion) window.Motion.swap(cardEl);
 
     const nextBtn = cardEl.querySelector('#wNext');
     if (nextBtn) nextBtn.addEventListener('click', () => goTo(s.next));

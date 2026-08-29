@@ -58,7 +58,7 @@
 
     <div class="mobile-bar">
       <button class="map-btn" id="openRail">&#9776; Map</button>
-      <div class="progress"><span data-w="mobileProgress" style="width:0%"></span></div>
+      <div class="progress"><span data-w="mobileProgress"></span></div>
       <button class="map-btn" id="openNotes">Log</button>
     </div>
 
@@ -100,6 +100,7 @@
 <script src="assets/profile.js"></script>
 <script src="assets/completion.js"></script>
 <script src="assets/header.js"></script>
+<script src="assets/motion.js"></script>
 <script src="assets/wizard-engine.js"></script>
 <script>
 (async function () {
@@ -194,6 +195,7 @@
 
       function setMode(newMode) {
         mode = newMode;
+        root.dataset.viewMode = mode;
         const url = new URL(location.href);
         url.searchParams.set('view', mode);
         history.replaceState(null, '', url);
@@ -203,20 +205,26 @@
       }
 
       function mountEngine() {
-        resetBtn.style.display = mode === 'wizard' ? '' : 'none';
-        if (mode === 'article') {
-          engine = renderArticleView(root, wizard, { profile });
-          engine.render();
-        } else {
-          engine = createWizardEngine(root, wizard, {
-            startAt: startStep,
-            currentWizardId: id,
-            resolveRef: filename => Storage.resolveRef(refIndex, filename),
-            loadWizard: wizardId => Storage.loadWizardData(wizardId, manifestWizards),
-            profile
-          });
-          engine.render();
-        }
+        root.dataset.viewMode = mode;
+        const paint = () => {
+          resetBtn.style.display = mode === 'wizard' ? '' : 'none';
+          if (mode === 'article') {
+            engine = renderArticleView(root, wizard, { profile });
+            engine.render();
+          } else {
+            engine = createWizardEngine(root, wizard, {
+              startAt: startStep,
+              currentWizardId: id,
+              resolveRef: filename => Storage.resolveRef(refIndex, filename),
+              loadWizard: wizardId => Storage.loadWizardData(wizardId, manifestWizards),
+              profile
+            });
+            engine.render();
+          }
+          if (window.Motion) Motion.updatePageSnap();
+        };
+        if (document.startViewTransition && !(window.Motion && Motion.prefersReducedMotion())) document.startViewTransition(paint);
+        else paint();
       }
 
       toggleEl.querySelectorAll('button').forEach(b => {

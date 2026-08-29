@@ -11,14 +11,15 @@
 .group:last-of-type::before{ display:none; }
 
 .group-head{ display:flex; align-items:center; gap:10px; font-family:var(--f-mono); font-size:0.78125rem; color:var(--tx-muted); margin-bottom:10px; position:relative; }
-.group-head .node{ position:absolute; left:-26px; width:18px; height:18px; border-radius:50%; background:var(--panel); border:2px solid var(--track); }
+.group-head .node{ position:absolute; left:-26px; width:18px; height:18px; border-radius:50%; background:var(--panel); border:2px solid var(--track); transition:border-color var(--motion-fast) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-base) var(--ease-out-soft); }
 .group.active .group-head .node{ border-color:var(--a1); box-shadow:0 0 0 4px var(--a1-dim); }
 .group.done .group-head .node{ border-color:var(--a1); background:var(--a1); }
 .group-head .label{ text-transform:uppercase; letter-spacing:0.06em; font-size:0.71875rem; }
 
 .ticks{ display:flex; flex-direction:column; gap:7px; margin: 2px 0 18px; }
-.tick{ display:flex; align-items:center; gap:9px; font-family:var(--f-mono); font-size:0.75rem; color:var(--tx-faint); cursor:default; }
-.tick .dot{ width:7px; height:7px; border-radius:50%; background:var(--track); flex:none; }
+.tick{ display:flex; align-items:center; gap:9px; font-family:var(--f-mono); font-size:0.75rem; color:var(--tx-faint); cursor:default; transition:color var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-snappy); }
+.tick .dot{ width:7px; height:7px; border-radius:50%; background:var(--track); flex:none; transition:background-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-base) var(--ease-out-soft), transform var(--motion-fast) var(--ease-snappy); }
+a.tick:hover{ transform:translate3d(3px,0,0); }
 .tick.current{ color:var(--a1-text); }
 .tick.current .dot{ background:var(--a1); box-shadow:0 0 8px var(--a1); }
 .tick.past{ color:var(--tx-muted); }
@@ -32,7 +33,8 @@
 .diamond-row.done{ color:var(--tx-muted); }
 
 .outcomes{ margin-top:6px; display:flex; flex-direction:column; gap:8px; padding-left:26px; }
-.outcome-node{ font-family:var(--f-mono); font-size:0.71875rem; border:1px dashed var(--track); color:var(--tx-faint); border-radius:8px; padding:8px 10px; }
+.outcome-node{ font-family:var(--f-mono); font-size:0.71875rem; border:1px dashed var(--track); color:var(--tx-faint); border-radius:8px; padding:8px 10px; transition:transform var(--motion-fast) var(--ease-snappy), border-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-base) var(--ease-out-soft); }
+a.outcome-node:hover{ transform:translate3d(3px,0,0); }
 .outcome-node.taken{ border-color:var(--a1); color:var(--a1); border-style:solid; box-shadow: inset 0 0 0 1px var(--a1-dim); }
 
 /* ---------- stage (wizard-specific prose width on top of the shared
@@ -55,7 +57,8 @@ h1.page-title{ font-family:var(--f-display); font-weight:700; font-size:clamp(1.
 /* .step-card is the other "card" from §4 (the main per-step surface in
    the wizard player). Same brutal/dopamine treatment as .wizard-card —
    see dashboard.css for why the safe-text var changes with it. */
-.step-card{ background: var(--panel); border:var(--border-w) solid var(--border); border-radius: var(--radius); padding: clamp(20px, 3.4vw, 34px); position:relative; overflow:hidden; scroll-margin-top:var(--util-h); }
+.step-card{ background:var(--panel); border:var(--border-w) solid var(--border); border-radius:var(--radius); padding:clamp(20px,3.4vw,34px); position:relative; overflow:hidden; scroll-margin-top:var(--util-h); }
+.stage > [data-w="stepCard"]{ view-transition-name:wizard-card; }
 .step-card::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background: var(--a1); }
 .step-card.branch::before{ background: var(--a2); }
 .step-card.outcome.success::before{ background: var(--a1); }
@@ -92,7 +95,8 @@ pre.code{
   font-family:var(--f-mono); font-size:0.84375rem; overflow-x:auto; margin:0 0 14px; position:relative;
 }
 .code-wrap{ position:relative; margin-bottom:14px; }
-.copy-btn{ position:absolute; top:8px; right:8px; background:var(--panel); border:var(--border-w) solid var(--border); color:var(--tx-muted); font-family:var(--f-mono); font-size:0.6875rem; border-radius:6px; padding:5px 9px; cursor:pointer; }
+.copy-btn{ position:absolute; top:8px; right:8px; background:var(--panel); border:var(--border-w) solid var(--border); color:var(--tx-muted); font-family:var(--f-mono); font-size:0.6875rem; border-radius:6px; padding:5px 9px; cursor:pointer; transition:transform var(--motion-fast) var(--ease-snappy), color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard); }
+.copy-btn:active{ transform:scale(.92); }
 .copy-btn:hover{ color:var(--a1); border-color:var(--a1); }
 .copy-btn.copied{ color:var(--a1); border-color:var(--a1); }
 
@@ -100,7 +104,8 @@ pre.code{
 .checklist li{ display:flex; align-items:flex-start; gap:10px; font-size:0.90625rem; }
 .checklist input[type=checkbox]{ appearance:none; width:18px; height:18px; margin-top:1px; flex:none; border:1.5px solid var(--tx-faint); border-radius:5px; background:transparent; cursor:pointer; position:relative; }
 .checklist input[type=checkbox]:checked{ border-color:var(--a1); background:var(--a1-dim); }
-.checklist input[type=checkbox]:checked::after{ content:"\2713"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:0.75rem; color:var(--a1-text); }
+.checklist input[type=checkbox]:checked::after{ content:"\2713"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:0.75rem; color:var(--a1-text); animation:check-pop var(--motion-fast) var(--ease-snappy) both; }
+@keyframes check-pop{ from{ opacity:0; transform:scale(.45) rotate(-12deg); } to{ opacity:1; transform:scale(1) rotate(0); } }
 .checklist label.done{ color:var(--tx-muted); text-decoration:line-through; text-decoration-color:var(--tx-faint); }
 
 .note-callout{ border:1px dashed var(--a2); background:var(--a2-dim); border-radius:8px; padding:12px 14px; font-size:0.84375rem; color:var(--tx); margin: 4px 0 16px; }
@@ -149,7 +154,7 @@ pre.code{
 .reset-row button:hover{ color:var(--danger); }
 
 /* notes drawer */
-.notes-drawer{ position:fixed; right:0; top:0; bottom:0; width:min(340px,90vw); background:var(--panel); border-left:1px solid var(--border); transform:translateX(100%); transition:transform 0.25s ease; z-index:50; padding:22px; display:flex; flex-direction:column; gap:12px; }
+.notes-drawer{ position:fixed; right:0; top:0; bottom:0; width:min(340px,90vw); background:var(--panel); border-left:1px solid var(--border); transform:translate3d(100%,0,0); transition:transform var(--motion-medium) var(--ease-standard); z-index:50; padding:22px; display:flex; flex-direction:column; gap:12px; box-shadow:-20px 0 50px rgba(0,0,0,.22); }
 .notes-drawer.open{ transform:translateX(0); }
 .notes-drawer h3{ font-family:var(--f-display); margin:0; font-size:1rem; }
 .notes-drawer p{ color:var(--tx-muted); font-size:0.8125rem; margin:0; }
@@ -163,7 +168,7 @@ pre.code{
 .article-card{ padding-bottom:8px; }
 .article-group-label{ font-family:var(--f-mono); font-size:0.78125rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--tx-faint); margin: 30px 0 4px; padding-top:18px; border-top:1px solid var(--border); }
 .article-group-label:first-child{ margin-top:0; padding-top:0; border-top:none; }
-.article-step{ padding: 14px 0 22px; border-bottom:1px dashed var(--border); scroll-margin-top:calc(var(--util-h) + 12px); }
+.article-step{ padding:14px 0 22px; border-bottom:1px dashed var(--border); scroll-margin-top:0; }
 .article-step:last-child{ border-bottom:none; }
 .article-step .step-title{ font-size:1.15rem; }
 .article-choices{ list-style:none; margin:0 0 16px; padding:0; display:flex; flex-direction:column; gap:6px; }
