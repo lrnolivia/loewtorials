@@ -66,7 +66,7 @@
     <p class="rail-title rail-nav-title" id="railTitle">Guide steps</p>
     <div data-w="railContent"></div>
     <div class="rail-actions">
-      <button class="btn btn-ghost btn-sm" id="openHelpDesktop">? Need help</button>
+      <button class="btn btn-ghost btn-sm" id="openHelpDesktop">&#10022; Need help</button>
       <button class="btn btn-primary btn-sm" id="markSolvedBtn" style="display:none;">&#10003; Mark solved / finished</button>
     </div>
   </aside>
@@ -113,6 +113,7 @@
 <script src="assets/header.js"></script>
 <script src="assets/motion.js"></script>
 <script src="assets/wizard-engine.js"></script>
+<script src="assets/help.js"></script>
 <script>
 (async function () {
   await ensureSynced();
@@ -310,33 +311,15 @@
       });
       window.onCompletionSaved = () => { solvedBtn.textContent = '\u2713 Solved \u2014 mark again'; };
 
-      function openHelp() {
-        const old = document.getElementById('help-backdrop'); if (old) old.remove();
-        const wrap = document.createElement('div');
-        wrap.innerHTML = `<div class="modal-backdrop" id="help-backdrop"><div class="modal">
-          <button class="modal-close" aria-label="Close">&times;</button><h2>Need help?</h2>
-          <p class="hint">Describe what went wrong or ask a question. Add terminal output and screenshots if they help. We’ll package the context into Markdown for an LLM.</p>
-          <div class="field"><label>What happened or what is your question?</label><textarea id="help-question" placeholder="Describe where you got stuck…"></textarea></div>
-          <div class="field"><label>Terminal output (optional)</label><textarea id="help-terminal" placeholder="Paste terminal output here…"></textarea></div>
-          <div class="field"><label>Screenshots (optional)</label><input type="file" id="help-screenshots" accept="image/*" multiple></div>
-          <div class="spec-actions"><button class="btn btn-ghost" id="help-download">&darr; Download help package (.md)</button><a class="btn btn-ghost" href="https://chatgpt.com/" target="_blank" rel="noopener">&#8599; Open ChatGPT</a><a class="btn btn-primary" href="https://claude.ai/new" target="_blank" rel="noopener">&#8599; Open Claude</a></div>
-        </div></div>`;
-        document.body.appendChild(wrap.firstElementChild);
-        const backdrop = document.getElementById('help-backdrop');
-        const close = () => backdrop.remove();
-        backdrop.querySelector('.modal-close').onclick = close;
-        backdrop.onclick = e => { if (e.target === backdrop) close(); };
-        document.getElementById('help-download').onclick = () => {
-          const question = document.getElementById('help-question').value.trim();
-          const terminal = document.getElementById('help-terminal').value.trim();
-          const files = [...document.getElementById('help-screenshots').files];
-          const md = ['# Help request: ' + wizard.title, '', '**Guide:** ' + location.href, '**Current view:** ' + mode, '', '## Question', question || '_No question entered._', '', '## Terminal output', terminal ? '```text\n' + terminal + '\n```' : '_None provided._', '', '## Screenshots', files.length ? files.map(f => '- Attach `' + f.name + '`').join('\n') : '_None provided._', '', 'Please diagnose the issue, explain the likely cause, and give safe step-by-step next actions.'].join('\n');
-          Storage.downloadText(id + '-help-request.md', md);
-          files.forEach(file => { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); });
-          showToast('Help package downloaded. Attach it and any screenshots to the LLM.');
-        };
-      }
-      document.getElementById('openHelpDesktop').addEventListener('click', openHelp);
+      document.getElementById('openHelpDesktop').addEventListener('click', () => {
+        GuideHelp.open({
+          id,
+          wizard,
+          getMode: () => mode,
+          getCurrentStepId: () => mode === 'wizard' && engine ? engine.currentId : '',
+          showToast
+        });
+      });
     })
     .catch(err => {
       console.error(err);

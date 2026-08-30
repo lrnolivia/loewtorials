@@ -1,0 +1,7 @@
+# Local configuration and secrets must never be committed.
+.dev.vars
+.dev.vars.*
+.env
+.env.*
+!.env.example
+

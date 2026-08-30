@@ -34,3 +34,16 @@ id = "9055fabf31d54ba2a5e09fc50485a656"
 # SITE_PASSWORD is deliberately NOT set here — it's a secret, and secrets
 # don't belong in a committed file. Set it with:
 #   npx wrangler secret put SITE_PASSWORD
+
+# Hosted technical help is deliberately NOT configured or enabled yet.
+# Keep it that way until every step in LLM-HELP-SETUP.md is complete.
+# The Worker code also requires LLM_HELP_ENABLED="true" before it will
+# make an inference request, so a missing flag always fails closed.
+#
+# [ai]
+# binding = "AI"
+#
+# [vars]
+# LLM_HELP_ENABLED = "false"
+# LLM_HELP_MODEL = "@cf/openai/gpt-oss-120b"
+# LLM_HELP_DAILY_LIMIT = "20"
