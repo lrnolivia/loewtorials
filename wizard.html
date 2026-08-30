@@ -4,19 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>loewtorials</title>
-<!-- Toolbox favicon, forced with a cache-busting version query on the
-     file-based links so a previously cached/blank favicon (including one
-     a browser or the domain cached before this was added) doesn't stick
-     around — bump ?v= if the icon ever changes again. The inline SVG
-     data URI is listed first and has no URL at all, so it can't be
-     served stale from any cache; it's what most modern browsers actually
-     use. rel="icon" is repeated with type="image/x-icon" and
-     rel="shortcut icon" for older browsers that only recognize those. -->
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50%25' y='54%25' dominant-baseline='central' text-anchor='middle' font-size='90'%3E%F0%9F%A7%B0%3C/text%3E%3C/svg%3E">
-<link rel="icon" type="image/png" href="favicon.png?v=1">
-<link rel="icon" type="image/x-icon" href="favicon.ico?v=1">
-<link rel="shortcut icon" href="favicon.ico?v=1">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=1">
+<link rel="icon" href="favicon.svg?v=2" type="image/svg+xml" sizes="any">
+<link rel="icon" href="favicon.png?v=2" type="image/png" sizes="32x32">
+<link rel="shortcut icon" href="favicon.ico?v=2" sizes="16x16">
+<link rel="mask-icon" href="safari-pinned-tab.svg?v=2" color="#ef4036">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2" sizes="180x180">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Sora:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600&family=Space+Grotesk:wght@600;700;800&family=Space+Mono:wght@400;700&family=Fraunces:opsz,wght@9..144,600;9..144,900&family=Playfair+Display:wght@700;800;900&family=IBM+Plex+Mono:wght@500;600&family=Work+Sans:wght@500;600&family=Inter:wght@500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Lora:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/styles.css">
@@ -264,7 +256,7 @@
           <div class="field"><label>Title</label><input type="text" id="guide-edit-title"></div>
           <div class="field"><label>Category</label><input type="text" id="guide-edit-category"></div>
           <div class="field"><label>Tags</label><input type="text" id="guide-edit-tags"></div>
-          <div class="field"><label>Default view</label><label class="default-view-toggle"><input type="checkbox" id="guide-edit-default"> Use ${mode === 'article' ? 'Article' : 'Guided'} as this guide’s default</label></div>
+          <div class="field"><label id="guide-edit-default-label">Default reading mode</label><div class="view-toggle edit-default-view-toggle" id="guide-edit-default" role="group" aria-labelledby="guide-edit-default-label"><button type="button" data-default-view="wizard">&#9776; Guided</button><button type="button" data-default-view="article">&para; Article</button></div><p class="field-help">Choose which reading mode opens first for this guide.</p></div>
           ${latestReport ? '<div class="field"><label>Latest saved report</label><div class="spec-actions"><button class="btn btn-ghost btn-sm" id="guide-report-copy" type="button">&#10697; Copy summary</button><button class="btn btn-ghost btn-sm" id="guide-report-download" type="button">&darr; Download .md</button></div></div>' : ''}
           <div class="spec-actions"><button class="btn btn-ghost" data-close type="button">&times; Cancel</button><button class="btn btn-primary" id="guide-edit-save" type="button">&#10003; Save</button></div>
         </div></div>`;
@@ -273,7 +265,18 @@
         document.getElementById('guide-edit-title').value = meta.title || '';
         document.getElementById('guide-edit-category').value = meta.category || '';
         document.getElementById('guide-edit-tags').value = (meta.tags || []).join(', ');
-        document.getElementById('guide-edit-default').checked = savedDefaultRef.value === mode;
+        let editDefaultView = savedDefaultRef.value || wizard.defaultView || 'wizard';
+        const defaultViewToggle = document.getElementById('guide-edit-default');
+        const paintDefaultView = () => defaultViewToggle.querySelectorAll('button').forEach(button => {
+          const active = button.dataset.defaultView === editDefaultView;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-pressed', String(active));
+        });
+        defaultViewToggle.querySelectorAll('button').forEach(button => button.onclick = () => {
+          editDefaultView = button.dataset.defaultView;
+          paintDefaultView();
+        });
+        paintDefaultView();
         if (latestReport) {
           document.getElementById('guide-report-copy').onclick = () => navigator.clipboard.writeText(latestReport.generatedMd || generateCompletionMd(wizard.title, latestReport)).then(() => showToast('Summary copied.'));
           document.getElementById('guide-report-download').onclick = () => Storage.downloadText(id + '-report-' + latestReport.date + '.md', latestReport.generatedMd || generateCompletionMd(wizard.title, latestReport));
@@ -290,8 +293,7 @@
             category: document.getElementById('guide-edit-category').value.trim() || 'Uncategorized',
             tags: document.getElementById('guide-edit-tags').value.split(',').map(t => t.trim()).filter(Boolean)
           };
-          if (document.getElementById('guide-edit-default').checked) patch.defaultView = mode;
-          else if (savedDefaultRef.value === mode) patch.defaultView = null;
+          patch.defaultView = editDefaultView;
           Storage.setOverride(id, patch);
           savedDefaultRef.value = patch.defaultView || null;
           document.getElementById('railGuideTitle').textContent = title;

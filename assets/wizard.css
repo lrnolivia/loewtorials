@@ -279,6 +279,9 @@ a.outcome-node:hover{ border-color:var(--a1); color:var(--a1); }
 .view-toggle button{ background:none; border:none; font-family:var(--f-mono); font-size:0.75rem; padding:6px 13px; border-radius:999px; color:var(--tx-muted); cursor:pointer; }
 .view-toggle button.active{ background:var(--a1); color:var(--a1t); }
 .view-toggle-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px; }
+.edit-default-view-toggle{ display:flex; width:100%; }
+.edit-default-view-toggle button{ flex:1; }
+.field-help{ margin:7px 0 0; color:var(--tx-muted); font-size:.72rem; line-height:1.4; }
 .view-default-btn{ background:none; border:none; font-family:var(--f-mono); font-size:0.71875rem; color:var(--tx-faint); text-decoration:underline; text-underline-offset:3px; cursor:pointer; padding:0; }
 .view-default-btn:hover{ color:var(--a1-text); }
 .view-default-btn[disabled]{ color:var(--a1-text); text-decoration:none; cursor:default; }

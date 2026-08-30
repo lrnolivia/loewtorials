@@ -1,3 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <text x="50%" y="54%" dominant-baseline="central" text-anchor="middle" font-size="82">&#129520;</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <path fill="#24231f" d="M22 8h20a6 6 0 0 1 6 6v6h5a7 7 0 0 1 7 7v25a7 7 0 0 1-7 7H11a7 7 0 0 1-7-7V27a7 7 0 0 1 7-7h5v-6a6 6 0 0 1 6-6Zm1 12h18v-5H23v5Z"/>
+  <path fill="#ef4036" d="M9 29h46v24H9z"/>
+  <path fill="#f7f3ea" d="M9 35h46v5H9zM9 45h46v3H9z"/>
+  <path fill="#4a9fbc" d="M28 26h8v10h-8z"/>
+  <path fill="#24231f" d="M6 38h52v4H6zM28 33h8v6h-8z"/>
 </svg>
