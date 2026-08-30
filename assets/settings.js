@@ -161,7 +161,7 @@ function injectSettingsModalStyles() {
     .settings-grid{ display:grid; grid-template-columns: 1fr; gap:0 16px; }
     .settings-grid .field{ grid-column: span 1; }
     #settings-backdrop{ justify-content:flex-end; padding:0; }
-    #settings-backdrop .settings-drawer{ min-height:100vh; width:min(520px,100vw); max-width:none; border-radius:0; overflow-y:auto; }
+    #settings-backdrop .settings-drawer{ min-height:100vh; width:min(520px,100vw); max-width:none; border-radius:0; overflow-y:auto; padding-top:calc(var(--util-h) + 32px); }
     #settings-backdrop.hidden .settings-drawer{ transform:translate3d(100%,0,0); }
     input[type=range]{ width:100%; accent-color: var(--a1); }
   `;
