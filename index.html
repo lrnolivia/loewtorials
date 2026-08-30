@@ -34,14 +34,12 @@
     bootTheme();
     var raw = localStorage.getItem('loewtorials.settings.v1');
     var s = raw ? JSON.parse(raw) : {};
-    if (s.layoutWidth) document.documentElement.style.setProperty('--shell-max-width', s.layoutWidth + 'px');
-    if (s.sidebarGap) document.documentElement.style.setProperty('--sidebar-gap', s.sidebarGap + 'px');
     if (s.textScale) document.documentElement.style.setProperty('--text-scale', String(s.textScale));
   }catch(e){}
 })();
 </script>
 </head>
-<body>
+<body class="dashboard-page">
 
 <div id="appHeaderMount"></div>
 
@@ -51,6 +49,10 @@
   <aside class="rail" id="rail" aria-label="Dashboard navigation">
     <p class="rail-title">loewtorials</p>
     <p class="rail-sub">Dashboard</p>
+    <div class="rail-search">
+      <input type="search" id="railSearchInput" placeholder="Search" aria-label="Search guides">
+      <div class="rail-search-drop" id="railSearchDrop"></div>
+    </div>
     <button class="btn btn-primary btn-sm" id="newWizardBtn" style="width:100%; justify-content:center; margin-bottom:8px;">+ New wizard</button>
     <button class="btn btn-ghost btn-sm" id="manageWizardsBtn" style="width:100%; justify-content:center; margin-bottom:18px;">Manage wizards</button>
 
@@ -82,6 +84,7 @@
         <option value="date-asc">Sort: Oldest first</option>
         <option value="category">Sort: Category</option>
       </select>
+      <label class="toolbar-check"><input type="checkbox" id="hideSolvedInput"> Hide completed</label>
       <button class="btn btn-ghost btn-sm" id="downloadLogBtn" title="Download the full activity log across all solved wizards">&darr; Activity log</button>
     </div>
 

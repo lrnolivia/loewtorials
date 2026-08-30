@@ -134,7 +134,7 @@ function createWizardEngine(rootEl, wizard, opts) {
         item.steps.forEach(id => {
           const s = STEPS[id];
           if (!s) return;
-          html += `<div class="tick ${tickState(id)}"><span class="dot"></span>${escapeHtml(s.title)}</div>`;
+          html += `<button type="button" class="tick ${tickState(id)}" data-step-link="${escapeHtml(id)}"><span class="dot"></span>${escapeHtml(s.title)}</button>`;
         });
         html += `</div></div>`;
       } else if (item.type === 'branch') {
@@ -143,20 +143,28 @@ function createWizardEngine(rootEl, wizard, opts) {
         const seen = currentId === item.id || history.includes(item.id);
         const isCurrent = currentId === item.id;
         const state = isCurrent ? 'active' : (seen ? 'done' : '');
-        html += `<div class="diamond-row ${state}"><span class="diamond"></span> ${escapeHtml(label)}</div>`;
+        html += `<button type="button" class="diamond-row ${state}" data-step-link="${escapeHtml(item.id)}"><span class="diamond"></span> ${escapeHtml(label)}</button>`;
       } else if (item.type === 'outcomes') {
         html += `<div class="outcomes">`;
         item.ids.forEach(id => {
           const s = STEPS[id];
           if (!s) return;
           const taken = currentId === id;
-          html += `<div class="outcome-node ${taken ? 'taken' : ''}">${escapeHtml((s.outcomeStyle === 'success' ? 'RESOLVED \u2014 ' : '').concat(s.title))}</div>`;
+          html += `<button type="button" class="outcome-node ${taken ? 'taken' : ''}" data-step-link="${escapeHtml(id)}">${escapeHtml((s.outcomeStyle === 'success' ? 'RESOLVED \u2014 ' : '').concat(s.title))}</button>`;
         });
         html += `</div>`;
       }
     });
 
     railContentEl.innerHTML = html;
+    railContentEl.querySelectorAll('[data-step-link]').forEach(link => link.addEventListener('click', () => {
+      const id = link.getAttribute('data-step-link');
+      if (id && id !== currentId) goTo(id);
+      const rail = document.getElementById('rail');
+      const backdrop = document.getElementById('railBackdrop');
+      if (rail) rail.classList.remove('open');
+      if (backdrop) backdrop.classList.remove('open');
+    }));
 
     if (mobileProgressEl) {
       const order = stepOrder();

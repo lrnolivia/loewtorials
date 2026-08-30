@@ -19,8 +19,6 @@ const BACKGROUND_OPTIONS = [
 const DEFAULT_SETTINGS = {
   background: 'grid',
   backgroundImage: null,  // data URL, only used when background === 'custom'
-  layoutWidth: 1180,      // px, feeds --shell-max-width
-  sidebarGap: 22,         // px, feeds --sidebar-gap
   textScale: 1
 };
 
@@ -81,8 +79,8 @@ function applyAppearance(rawSettings) {
   const settings = Object.assign({}, DEFAULT_SETTINGS, rawSettings || {});
   const root = document.documentElement.style;
 
-  root.setProperty('--shell-max-width', settings.layoutWidth + 'px');
-  root.setProperty('--sidebar-gap', settings.sidebarGap + 'px');
+  root.removeProperty('--shell-max-width');
+  root.setProperty('--sidebar-gap', '48px');
   root.setProperty('--text-scale', String(settings.textScale));
 
   if (document.body) applyBackground(settings);
@@ -104,36 +102,14 @@ function bootAppearance() {
 // Settings modal (layout/background + sync + backup)
 // ---------------------------------------------------------------------
 function buildSettingsModalHTML() {
-  const bgOpts = BACKGROUND_OPTIONS.map(b => '<option value="' + b.id + '">' + b.label + '</option>').join('');
-
   return '' +
   '<div class="modal-backdrop hidden" id="settings-backdrop">' +
-    '<div class="modal">' +
+    '<div class="modal settings-drawer">' +
       '<button class="modal-close" id="settings-close" aria-label="Close">&times;</button>' +
       '<h2>Layout &amp; data</h2>' +
-      '<p class="hint">Look and color live in the paintbrush icon now — this is everything else. Changes apply live and save to this browser.</p>' +
+      '<p class="hint">Appearance lives in the paintbrush menu. Data and accessibility settings save to this browser.</p>' +
 
       '<div class="settings-grid">' +
-        '<div class="field">' +
-          '<label>Background</label>' +
-          '<select id="set-background">' + bgOpts + '</select>' +
-        '</div>' +
-        '<div class="field" id="bg-upload-field" style="display:none">' +
-          '<label>Background image</label>' +
-          '<div class="dropzone" id="bg-dropzone">' +
-            '<strong>Click to upload</strong> or drag an image here. Large images are resized before saving.' +
-          '</div>' +
-          '<input type="file" id="bg-file-input" accept="image/*" style="display:none">' +
-        '</div>' +
-
-        '<div class="field">' +
-          '<label>Content width — <span id="layout-width-val"></span></label>' +
-          '<input type="range" id="set-layout-width" min="860" max="1800" step="20">' +
-        '</div>' +
-        '<div class="field">' +
-          '<label>Sidebar gap — <span id="sidebar-gap-val"></span></label>' +
-          '<input type="range" id="set-sidebar-gap" min="8" max="48" step="2">' +
-        '</div>' +
         '<div class="field">' +
           '<label>Text size — <span id="text-scale-val"></span></label>' +
           '<input type="range" id="set-text-scale" min="0.85" max="1.3" step="0.05">' +
@@ -161,6 +137,7 @@ function buildSettingsModalHTML() {
       '<div class="divider">backup</div>' +
       '<div class="spec-actions">' +
         '<button class="btn btn-ghost btn-sm" id="settings-export">Export everything (.json)</button>' +
+        '<button class="btn btn-ghost btn-sm" id="settings-export-reports">Export reports (.md)</button>' +
         '<label class="btn btn-ghost btn-sm" id="settings-import-label">' +
           'Import backup' +
           '<input type="file" id="settings-import-input" accept="application/json" style="display:none">' +
@@ -181,9 +158,11 @@ function injectSettingsModalStyles() {
   const style = document.createElement('style');
   style.id = 'settings-modal-styles';
   style.textContent = `
-    .settings-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:0 16px; }
+    .settings-grid{ display:grid; grid-template-columns: 1fr; gap:0 16px; }
     .settings-grid .field{ grid-column: span 1; }
-    @media (max-width:560px){ .settings-grid{ grid-template-columns:1fr; } }
+    #settings-backdrop{ justify-content:flex-end; padding:0; }
+    #settings-backdrop .settings-drawer{ min-height:100vh; width:min(520px,100vw); max-width:none; border-radius:0; overflow-y:auto; }
+    #settings-backdrop.hidden .settings-drawer{ transform:translate3d(100%,0,0); }
     input[type=range]{ width:100%; accent-color: var(--a1); }
   `;
   document.head.appendChild(style);
@@ -204,14 +183,6 @@ function initSettingsModal() {
   });
 
   const els = {
-    background: document.getElementById('set-background'),
-    bgUploadField: document.getElementById('bg-upload-field'),
-    bgDropzone: document.getElementById('bg-dropzone'),
-    bgFileInput: document.getElementById('bg-file-input'),
-    layoutWidth: document.getElementById('set-layout-width'),
-    layoutWidthVal: document.getElementById('layout-width-val'),
-    sidebarGap: document.getElementById('set-sidebar-gap'),
-    sidebarGapVal: document.getElementById('sidebar-gap-val'),
     textScale: document.getElementById('set-text-scale'),
     textScaleVal: document.getElementById('text-scale-val')
   };
@@ -219,74 +190,12 @@ function initSettingsModal() {
   let current = Object.assign({}, DEFAULT_SETTINGS, Storage.getSettings());
 
   function syncFormFromCurrent() {
-    els.background.value = current.background;
-    els.bgUploadField.style.display = current.background === 'custom' ? 'block' : 'none';
-    els.layoutWidth.value = current.layoutWidth;
-    els.layoutWidthVal.textContent = current.layoutWidth + 'px';
-    els.sidebarGap.value = current.sidebarGap;
-    els.sidebarGapVal.textContent = current.sidebarGap + 'px';
     els.textScale.value = current.textScale;
     els.textScaleVal.textContent = Math.round(current.textScale * 100) + '%';
   }
 
   function preview() { applyAppearance(current); }
   function persist() { Storage.setSettings(current); }
-
-  els.background.addEventListener('change', () => {
-    current.background = els.background.value;
-    els.bgUploadField.style.display = current.background === 'custom' ? 'block' : 'none';
-    preview(); persist();
-  });
-
-  function handleBgFile(file) {
-    if (!file || !file.type.startsWith('image/')) return;
-    const img = new Image();
-    const reader = new FileReader();
-    reader.onload = e => {
-      img.onload = () => {
-        // Cap to 1920px on the long edge before storing, so a phone photo
-        // doesn't blow past localStorage's ~5MB quota.
-        const MAX = 1920;
-        let width = img.width, height = img.height;
-        if (width > MAX || height > MAX) {
-          const scale = MAX / Math.max(width, height);
-          width = Math.round(width * scale);
-          height = Math.round(height * scale);
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-        current.backgroundImage = dataUrl;
-        preview(); persist();
-        if (window.showToast) window.showToast('Background image saved.');
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-  els.bgDropzone.addEventListener('click', () => els.bgFileInput.click());
-  els.bgFileInput.addEventListener('change', () => handleBgFile(els.bgFileInput.files[0]));
-  els.bgDropzone.addEventListener('dragover', e => { e.preventDefault(); els.bgDropzone.classList.add('drag'); });
-  els.bgDropzone.addEventListener('dragleave', () => els.bgDropzone.classList.remove('drag'));
-  els.bgDropzone.addEventListener('drop', e => {
-    e.preventDefault(); els.bgDropzone.classList.remove('drag');
-    handleBgFile(e.dataTransfer.files[0]);
-  });
-
-  els.layoutWidth.addEventListener('input', () => {
-    current.layoutWidth = Number(els.layoutWidth.value);
-    els.layoutWidthVal.textContent = current.layoutWidth + 'px';
-    preview();
-  });
-  els.layoutWidth.addEventListener('change', persist);
-
-  els.sidebarGap.addEventListener('input', () => {
-    current.sidebarGap = Number(els.sidebarGap.value);
-    els.sidebarGapVal.textContent = current.sidebarGap + 'px';
-    preview();
-  });
-  els.sidebarGap.addEventListener('change', persist);
 
   els.textScale.addEventListener('input', () => {
     current.textScale = Number(els.textScale.value);
@@ -299,11 +208,15 @@ function initSettingsModal() {
     current = Object.assign({}, DEFAULT_SETTINGS);
     Storage.resetSettings();
     syncFormFromCurrent(); preview();
-    if (window.showToast) window.showToast('Layout settings reset to default.');
+    if (window.showToast) window.showToast('Settings reset to default.');
   });
 
   document.getElementById('settings-export').addEventListener('click', () => {
     Storage.downloadJSON('loewtorials-backup-' + new Date().toISOString().slice(0,10) + '.json', Storage.exportAll());
+  });
+  document.getElementById('settings-export-reports').addEventListener('click', () => {
+    const markdown = window.generateActivityLogMd ? generateActivityLogMd() : '# loewtorials reports\n\nNo reports are available.';
+    Storage.downloadText('loewtorials-reports-' + new Date().toISOString().slice(0,10) + '.md', markdown);
   });
 
   const syncStatusLine = document.getElementById('sync-status-line');

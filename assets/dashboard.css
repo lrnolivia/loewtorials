@@ -51,7 +51,7 @@
 .toolbar .spacer{ flex:1; }
 
 .wizard-grid{
-  display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px;
+  display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:24px;
 }
 
 /* .wizard-card is the "card" from §4. Its own text (title, sub, desc,
@@ -72,6 +72,9 @@
 }
 .wizard-card.is-pressed{ transform:translate3d(0,-1px,0) scale(.97); filter:saturate(.94); }
 .wizard-card.is-opening{ view-transition-name:wizard-card; }
+.wizard-card.is-solved{ opacity:.58; filter:saturate(.55); }
+.wizard-card.is-solved:hover{ opacity:.82; filter:saturate(.8); }
+.toolbar-check{ display:inline-flex; align-items:center; gap:6px; color:var(--tx-muted); font:600 .7rem var(--f-mono); white-space:nowrap; }
 .wizard-card .card-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
 .wizard-card h3{ font-family:var(--f-display); font-size:1.0625rem; margin:2px 0 0; line-height:1.3; }
 .wizard-card .card-sub{ color:var(--tx-muted); font-size:0.8125rem; margin:0; }

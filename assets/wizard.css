@@ -17,7 +17,7 @@
 .group-head .label{ text-transform:uppercase; letter-spacing:0.06em; font-size:0.71875rem; }
 
 .ticks{ display:flex; flex-direction:column; gap:7px; margin: 2px 0 18px; }
-.tick{ display:flex; align-items:center; gap:9px; font-family:var(--f-mono); font-size:0.75rem; color:var(--tx-faint); cursor:default; transition:color var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-snappy); }
+.tick{ display:flex; width:100%; align-items:center; gap:9px; font-family:var(--f-mono); font-size:0.75rem; color:var(--tx-faint); cursor:pointer; transition:color var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-snappy); background:transparent; border:0; padding:0; text-align:left; }
 .tick .dot{ width:7px; height:7px; border-radius:50%; background:var(--track); flex:none; transition:background-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-base) var(--ease-out-soft), transform var(--motion-fast) var(--ease-snappy); }
 a.tick:hover{ transform:translate3d(3px,0,0); }
 .tick.current{ color:var(--a1-text); }
@@ -25,7 +25,7 @@ a.tick:hover{ transform:translate3d(3px,0,0); }
 .tick.past{ color:var(--tx-muted); }
 .tick.past .dot{ background:var(--a1-dim); }
 
-.diamond-row{ display:flex; align-items:center; gap:10px; margin: 4px 0 18px -3px; font-family:var(--f-mono); font-size:0.75rem; color:var(--tx-faint); }
+.diamond-row{ display:flex; width:100%; align-items:center; gap:10px; margin: 4px 0 18px -3px; font-family:var(--f-mono); font-size:0.75rem; color:var(--tx-faint); background:transparent; border:0; padding:0; text-align:left; cursor:pointer; }
 .diamond{ width:14px; height:14px; transform:rotate(45deg); background:var(--panel); border:2px solid var(--track); flex:none; }
 .diamond-row.active .diamond{ border-color:var(--a2); box-shadow:0 0 8px var(--a2-dim); }
 .diamond-row.active{ color:var(--a2); }
@@ -33,7 +33,7 @@ a.tick:hover{ transform:translate3d(3px,0,0); }
 .diamond-row.done{ color:var(--tx-muted); }
 
 .outcomes{ margin-top:6px; display:flex; flex-direction:column; gap:8px; padding-left:26px; }
-.outcome-node{ font-family:var(--f-mono); font-size:0.71875rem; border:1px dashed var(--track); color:var(--tx-faint); border-radius:8px; padding:8px 10px; transition:transform var(--motion-fast) var(--ease-snappy), border-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-base) var(--ease-out-soft); }
+.outcome-node{ font-family:var(--f-mono); font-size:0.71875rem; border:1px dashed var(--track); color:var(--tx-faint); border-radius:8px; padding:8px 10px; transition:transform var(--motion-fast) var(--ease-snappy), border-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-base) var(--ease-out-soft); background:transparent; text-align:left; cursor:pointer; }
 a.outcome-node:hover{ transform:translate3d(3px,0,0); }
 .outcome-node.taken{ border-color:var(--a1); color:var(--a1); border-style:solid; box-shadow: inset 0 0 0 1px var(--a1-dim); }
 
@@ -43,7 +43,7 @@ a.outcome-node:hover{ transform:translate3d(3px,0,0); }
    text-column width in `ch` (character-relative) units separately from
    the stage itself, so code blocks, cards, and checklists can still use
    the full available width. */
-.step-body, .checklist, .note-callout, .page-sub{ max-width:74ch; }
+.step-body, .checklist, .note-callout, .page-sub{ max-width:74ch; overflow-wrap:anywhere; }
 /* scroll-margin-top reserves space for the sticky utility bar (60px,
    see --util-h in styles.css) when this is the target of scrollIntoView
    (assets/wizard-engine.js goTo()) — without it, aligning this to the
@@ -52,6 +52,7 @@ a.outcome-node:hover{ transform:translate3d(3px,0,0); }
 .stage-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom: clamp(18px, 3vw, 30px); scroll-margin-top:var(--util-h); }
 h1.page-title{ font-family:var(--f-display); font-weight:700; font-size:clamp(1.375rem, 3.4vw, 2rem); margin:0; letter-spacing:-0.01em; }
 .page-sub{ color:var(--tx-muted); margin:8px 0 0; font-size:0.90625rem; max-width:52ch; }
+.page-subtitle{ color:var(--tx); margin:8px 0 0; font-size:1rem; font-weight:700; max-width:58ch; }
 .util-row{ display:flex; gap:8px; flex:none; }
 
 /* .step-card is the other "card" from §4 (the main per-step surface in
@@ -82,6 +83,8 @@ h1.page-title{ font-family:var(--f-display); font-weight:700; font-size:clamp(1.
 [data-style="brutal"] .match-badge{ border:2px solid var(--border); border-radius:3px; }
 
 .step-body{ font-size:0.9375rem; margin:0 0 16px; }
+.step-body img, .step-body video, .step-body iframe{ max-width:100%; height:auto; }
+.step-body table{ display:block; max-width:100%; overflow-x:auto; }
 .step-body p{ margin:0 0 12px; }
 .step-body strong{ color:var(--a1-text); }
 
@@ -94,6 +97,7 @@ pre.code{
   border:var(--border-w) solid var(--border); border-radius:8px; padding:14px 16px;
   font-family:var(--f-mono); font-size:0.84375rem; overflow-x:auto; margin:0 0 14px; position:relative;
 }
+.code-wrap, pre.code{ max-width:100%; min-width:0; }
 .code-wrap{ position:relative; margin-bottom:14px; }
 .copy-btn{ position:absolute; top:8px; right:8px; background:var(--panel); border:var(--border-w) solid var(--border); color:var(--tx-muted); font-family:var(--f-mono); font-size:0.6875rem; border-radius:6px; padding:5px 9px; cursor:pointer; transition:transform var(--motion-fast) var(--ease-snappy), color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard); }
 .copy-btn:active{ transform:scale(.92); }
@@ -168,7 +172,7 @@ pre.code{
 .article-card{ padding-bottom:8px; }
 .article-group-label{ font-family:var(--f-mono); font-size:0.78125rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--tx-faint); margin: 30px 0 4px; padding-top:18px; border-top:1px solid var(--border); }
 .article-group-label:first-child{ margin-top:0; padding-top:0; border-top:none; }
-.article-step{ padding:14px 0 22px; border-bottom:1px dashed var(--border); scroll-margin-top:0; }
+.article-step{ padding:14px 0 22px; border-bottom:1px dashed var(--border); scroll-margin-top:calc(var(--util-h) + 12px); max-width:100%; min-width:0; overflow-wrap:anywhere; }
 .article-step:last-child{ border-bottom:none; }
 .article-step .step-title{ font-size:1.15rem; }
 .article-choices{ list-style:none; margin:0 0 16px; padding:0; display:flex; flex-direction:column; gap:6px; }
@@ -219,6 +223,22 @@ a.outcome-node:hover{ border-color:var(--a1); color:var(--a1); }
 .view-default-btn{ background:none; border:none; font-family:var(--f-mono); font-size:0.71875rem; color:var(--tx-faint); text-decoration:underline; text-underline-offset:3px; cursor:pointer; padding:0; }
 .view-default-btn:hover{ color:var(--a1-text); }
 .view-default-btn[disabled]{ color:var(--a1-text); text-decoration:none; cursor:default; }
+
+.guide-page #railHeroMount .app-hero{ display:block; padding:0 0 22px; max-width:none; }
+.guide-page #railHeroMount .app-hero .mark{ font-size:2.4rem; }
+.guide-page #railHeroMount .app-hero h1{ font-size:1.45rem; }
+.guide-page #railHeroMount .app-hero .tagline{ font-size:.8rem; }
+.guide-page.scrolled #railHeroMount .app-hero{ display:block; }
+.guide-page #appHeroMount{ width:auto; }
+.guide-page #appHeroMount .specs-bar-wrap{ padding-bottom:24px; }
+.guide-page.scrolled #appHeroMount .specs-bar-wrap{ display:block; }
+
+@media (max-width:700px){
+  .stage-top{ flex-direction:column; }
+  .util-row{ flex-wrap:wrap; }
+  .step-card{ padding:18px; }
+  .article-card{ overflow:hidden; }
+}
 
 .confidence-banner{ display:flex; gap:12px; align-items:flex-start; border:var(--border-w) solid var(--a2); background:var(--a2-dim); border-radius:var(--radius); padding:14px 18px; margin-bottom:18px; }
 .confidence-banner .icon{ font-size:1.1rem; line-height:1.4; flex:none; }

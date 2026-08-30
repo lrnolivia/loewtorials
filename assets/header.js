@@ -77,13 +77,14 @@ function contrastRatio(hexA, hexB) {
 //     connect visually to the top bar, instead of only starting below
 //     the whole hero block.
 function buildUtilityHTML() {
-  const miniSpecsHtml = HEADER_SPECS.map(s => '<span>' + s.icon + '</span>').join('');
+  const onGuide = document.body.classList.contains('guide-page');
+  const miniSpecsHtml = HEADER_SPECS.map(s => '<span class="mini-spec" title="' + s.label + '" aria-label="' + s.label + '">' + s.icon + '</span>').join('');
 
   return '' +
   '<header class="app-header">' +
     '<div class="utility">' +
       '<div class="utility-inner">' +
-        '<button class="home-btn" id="hdrHomeBtn" title="Home">\u2302</button>' +
+        (onGuide ? '<button class="home-btn" id="hdrHomeBtn" title="Back" aria-label="Back">\u2190</button>' : '') +
         '<div class="mini-brand"><span class="mark">\u{1F9F0}</span><span class="word">loewtorials</span></div>' +
         '<div class="mini-specs" id="hdrMiniSpecs">' + miniSpecsHtml + '</div>' +
         '<div class="header-spacer"></div>' +
@@ -107,6 +108,9 @@ function buildUtilityHTML() {
 }
 
 function buildHeroHTML() {
+  const tagline = document.body.classList.contains('guide-page')
+    ? 'Guides for my gaming PC, web projects, and whatever I build next.'
+    : 'Interactive step-by-step guides for your own Bazzite/SteamOS setup \u2014 built to grow.';
   const specsHtml = HEADER_SPECS.map(s =>
     '<span class="spec-item"><span class="spec-icon">' + s.icon + '</span><b>' + s.label + '</b></span>').join('');
 
@@ -114,7 +118,7 @@ function buildHeroHTML() {
     '<section class="app-hero">' +
       '<div class="mark">\u{1F9F0}</div>' +
       '<h1>loewtorials</h1>' +
-      '<p class="tagline">Interactive step-by-step guides for your own Bazzite/SteamOS setup \u2014 built to grow.</p>' +
+      '<p class="tagline">' + tagline + '</p>' +
     '</section>' +
     '<div class="specs-bar-wrap">' +
       '<div class="specs-bar" id="hdrSpecsBar">' + specsHtml + '</div>' +
@@ -164,6 +168,9 @@ function buildThemePopHTML() {
     '<div class="switch-2" id="popModeSwitch" data-toggle="mode"><button data-value="light">Light</button><button data-value="dark">Dark</button></div>' +
     '<h5>Corners</h5>' +
     '<div class="switch-2" id="popCornersSwitch" data-toggle="corners"><button data-value="square">Square</button><button data-value="rounded">Rounded</button></div>' +
+    '<h5>Background pattern</h5>' +
+    '<div class="background-previews" id="popBackgroundPreviews">' + BACKGROUND_OPTIONS.map(b => '<button type="button" class="background-preview bg-preview-' + b.id + '" data-background="' + b.id + '"><span></span><b>' + b.label.replace(' (default)', '') + '</b></button>').join('') + '</div>' +
+    '<input type="file" id="popBackgroundFile" accept="image/*" hidden>' +
     '<h5>Customize</h5>' +
     '<div class="customize-grid" id="popCustomizeGrid">' + customizeRows + '</div>' +
     '<button class="btn btn-ghost btn-sm" id="popCustomizeReset" type="button" style="margin-top:6px;">Reset customization</button>' +
@@ -221,6 +228,8 @@ function syncThemePopUI() {
   syncSwitchUI('popCornersSwitch', _themePrefs.corners);
   document.querySelectorAll('#popThemeSwatches button').forEach(b =>
     b.classList.toggle('on', b.getAttribute('data-theme-id') === _themePrefs.theme));
+  const currentBackground = Object.assign({}, DEFAULT_SETTINGS, Storage.getSettings()).background;
+  document.querySelectorAll('#popBackgroundPreviews button').forEach(b => b.classList.toggle('on', b.dataset.background === currentBackground));
   refreshPresetDots(); // neutral-token presets (bg/panel/surf/border) depend on mode, so these must be redone on every state change, not just once at init
   refreshCustomizeUI();
   ['display', 'body', 'mono'].forEach(kind => {
@@ -250,6 +259,34 @@ function wireThemePop() {
   document.getElementById('popCornersSwitch').addEventListener('click', e => {
     const b = e.target.closest('button[data-value]'); if (!b) return;
     setThemePrefs({ corners: b.getAttribute('data-value') });
+  });
+  document.getElementById('popBackgroundPreviews').addEventListener('click', e => {
+    const button = e.target.closest('button[data-background]');
+    if (!button) return;
+    if (button.dataset.background === 'custom') { document.getElementById('popBackgroundFile').click(); return; }
+    const settings = Storage.setSettings({ background: button.dataset.background });
+    applyAppearance(settings);
+    syncThemePopUI();
+  });
+  document.getElementById('popBackgroundFile').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = event => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 1920;
+        const scale = Math.min(1, max / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale); canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        const settings = Storage.setSettings({ background:'custom', backgroundImage:canvas.toDataURL('image/jpeg', .82) });
+        applyAppearance(settings); syncThemePopUI();
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   });
   document.getElementById('popThemeSwatches').addEventListener('click', e => {
     const b = e.target.closest('button[data-theme-id]'); if (!b) return;
@@ -316,7 +353,7 @@ function renderSearchDrop(list, query) {
   const q = (query || '').toLowerCase();
   const matches = list.filter(w => (w.title || '').toLowerCase().includes(q)).slice(0, 8);
   drop.innerHTML = matches.length
-    ? matches.map(w => '<div class="hsearch-item" data-wizard-id="' + w.id + '">' + (w.title || w.id) + '</div>').join('')
+    ? matches.map(w => '<div class="hsearch-item" data-wizard-id="' + w.id + '"><span>' + (w.title || w.id) + '</span><span class="search-category">' + (w.category || 'Uncategorized') + '</span></div>').join('')
     : '<div class="hsearch-empty">No matching wizards</div>';
   drop.querySelectorAll('.hsearch-item').forEach(item => {
     item.addEventListener('click', () => { location.href = 'wizard.html?id=' + encodeURIComponent(item.getAttribute('data-wizard-id')); });
@@ -337,6 +374,19 @@ function wireSearch() {
   });
   input.addEventListener('input', () => loadWizardList().then(list => renderSearchDrop(list, input.value)));
   document.addEventListener('keydown', e => { if (e.key === 'Escape') search.classList.remove('open'); });
+
+  const railSearch = document.getElementById('railSearchInput');
+  const railDrop = document.getElementById('railSearchDrop');
+  if (railSearch && railDrop) {
+    const renderRailResults = query => loadWizardList().then(list => {
+      const q = String(query || '').toLowerCase();
+      const matches = list.filter(w => [w.title, w.category, ...(w.tags || [])].join(' ').toLowerCase().includes(q)).slice(0, 8);
+      railDrop.innerHTML = matches.map(w => '<button type="button" data-wizard-id="' + w.id + '"><span>' + (w.title || w.id) + '</span><span class="search-category">' + (w.category || 'Uncategorized') + '</span></button>').join('') || '<p>No matches</p>';
+      railDrop.querySelectorAll('[data-wizard-id]').forEach(item => item.addEventListener('click', () => { location.href = 'wizard.html?id=' + encodeURIComponent(item.dataset.wizardId); }));
+    });
+    railSearch.addEventListener('focus', () => renderRailResults(railSearch.value));
+    railSearch.addEventListener('input', () => renderRailResults(railSearch.value));
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -361,9 +411,9 @@ function wireIconButtons() {
     settingsModal.open();
   });
 
-  document.getElementById('hdrHomeBtn').addEventListener('click', () => {
-    const onDashboard = /(^|\/)index\.html$/.test(location.pathname) || /\/$/.test(location.pathname);
-    if (onDashboard) window.scrollTo({ top: 0 });
+  const homeBtn = document.getElementById('hdrHomeBtn');
+  if (homeBtn) homeBtn.addEventListener('click', () => {
+    if (history.length > 1) history.back();
     else location.href = 'index.html';
   });
 
@@ -387,7 +437,35 @@ function wireIconButtons() {
     const y = window.scrollY;
     if (y > 70) document.body.classList.add('scrolled');
     else if (y < 4) document.body.classList.remove('scrolled');
+    const topButton = document.getElementById('backToTop');
+    if (topButton) topButton.classList.toggle('show', y > Math.max(500, innerHeight * .75));
   }, { passive: true });
+
+  let topButton = document.getElementById('backToTop');
+  if (!topButton) {
+    topButton = document.createElement('button'); topButton.id = 'backToTop'; topButton.className = 'back-to-top'; topButton.innerHTML = '&uarr; Back to top'; document.body.appendChild(topButton);
+  }
+  topButton.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+
+  let pull = document.getElementById('pullRefresh');
+  if (!pull) {
+    pull = document.createElement('div'); pull.id = 'pullRefresh'; pull.className = 'pull-refresh'; pull.innerHTML = '<span>&#8635;</span> Pull to refresh'; document.body.appendChild(pull);
+  }
+  let pullStart = null, pullDistance = 0;
+  window.addEventListener('touchstart', e => { if (scrollY === 0 && e.touches.length === 1) pullStart = e.touches[0].clientY; }, { passive:true });
+  window.addEventListener('touchmove', e => {
+    if (pullStart == null) return;
+    pullDistance = Math.max(0, Math.min(130, e.touches[0].clientY - pullStart));
+    pull.classList.toggle('show', pullDistance > 18);
+    pull.classList.toggle('ready', pullDistance > 82);
+    pull.innerHTML = '<span>&#8635;</span> ' + (pullDistance > 82 ? 'Release to refresh' : 'Pull to refresh');
+  }, { passive:true });
+  window.addEventListener('touchend', () => {
+    const shouldRefresh = pullDistance > 82;
+    pullStart = null; pullDistance = 0;
+    if (shouldRefresh) { pull.innerHTML = '<span>&#8635;</span> Refreshing…'; setTimeout(() => location.reload(), 120); }
+    else pull.classList.remove('show', 'ready');
+  }, { passive:true });
 }
 
 function initHeader() {
@@ -396,7 +474,13 @@ function initHeader() {
   mount.innerHTML = buildUtilityHTML();
 
   const heroMount = document.getElementById('appHeroMount');
-  if (heroMount) heroMount.innerHTML = buildHeroHTML();
+  const railHeroMount = document.getElementById('railHeroMount');
+  if (document.body.classList.contains('guide-page') && railHeroMount && heroMount) {
+    const holder = document.createElement('div');
+    holder.innerHTML = buildHeroHTML();
+    railHeroMount.appendChild(holder.querySelector('.app-hero'));
+    heroMount.appendChild(holder.querySelector('.specs-bar-wrap'));
+  } else if (heroMount) heroMount.innerHTML = buildHeroHTML();
 
   _themePrefs = currentThemePrefs();
   document.getElementById('hdrThemePop').innerHTML = buildThemePopHTML();

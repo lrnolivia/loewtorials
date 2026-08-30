@@ -12,6 +12,7 @@
   const searchInput = document.getElementById('searchInput');
   const categorySelect = document.getElementById('categorySelect');
   const sortSelect = document.getElementById('sortSelect');
+  const hideSolvedInput = document.getElementById('hideSolvedInput');
   const toast = document.getElementById('toast');
   const categoryNav = document.getElementById('categoryNav');
 
@@ -60,6 +61,7 @@
     currentList = applyFiltersAndSort(all).filter(w => {
       if (statusFilter === 'all') return true;
       if (statusFilter === 'active') return !w.status || w.status === 'active';
+      if (statusFilter === 'archived') return w.status === 'archived' || w.autoArchived;
       return w.status === statusFilter;
     });
     renderGrid(currentList);
@@ -70,7 +72,7 @@
     document.getElementById('countAll').textContent = all.length;
     document.getElementById('countActive').textContent = all.filter(w => !w.status || w.status === 'active').length;
     document.getElementById('countSolved').textContent = all.filter(w => w.status === 'solved').length;
-    document.getElementById('countArchived').textContent = all.filter(w => w.status === 'archived').length;
+    document.getElementById('countArchived').textContent = all.filter(w => w.status === 'archived' || w.autoArchived).length;
   }
 
   document.querySelectorAll('#viewTabs button').forEach(btn => {
@@ -112,6 +114,7 @@
     const q = searchInput.value.trim().toLowerCase();
     const cat = categorySelect.value;
     let list = all.filter(w => {
+      if (hideSolvedInput.checked && w.status === 'solved') return false;
       if (cat && w.category !== cat) return false;
       if (!q) return true;
       const hay = [w.title, w.subtitle, w.description, (w.tags || []).join(' ')].join(' ').toLowerCase();
@@ -124,6 +127,7 @@
       if (sort === 'category') return (a.category || '').localeCompare(b.category || '') || a.title.localeCompare(b.title);
       return a.title.localeCompare(b.title); // name
     });
+    if (statusFilter === 'all') list.sort((a, b) => Number(a.status === 'solved') - Number(b.status === 'solved'));
     return list;
   }
 
@@ -166,7 +170,7 @@
       ? `<button data-action="unarchive" data-id="${escapeHtml(w.id)}">Restore to active</button>`
       : `<button data-action="archive" data-id="${escapeHtml(w.id)}">Archive</button>`;
     return `
-    <article class="wizard-card" data-id="${escapeHtml(w.id)}">
+    <article class="wizard-card${w.status === 'solved' ? ' is-solved' : ''}" data-id="${escapeHtml(w.id)}">
       <div class="card-top">
         <span class="badge">${escapeHtml(w.category || 'Uncategorized')}</span>
         ${w.kind === 'article' ? '<span class="badge">Article</span>' : ''}
@@ -236,6 +240,7 @@
   searchInput.addEventListener('input', refresh);
   categorySelect.addEventListener('change', refresh);
   sortSelect.addEventListener('change', refresh);
+  hideSolvedInput.addEventListener('change', refresh);
 
   // ---------------- hidden wizards ----------------
   function renderHiddenLink() {
@@ -318,7 +323,8 @@
       if (statusVal === 'hidden') return w.hidden;
       if (w.hidden && statusVal !== 'all') return false; // hidden wizards only show under "All" or "Hidden"
       if (statusVal === 'active') return !w.status || w.status === 'active';
-      if (statusVal === 'solved' || statusVal === 'archived') return w.status === statusVal;
+      if (statusVal === 'archived') return w.status === 'archived' || w.autoArchived;
+      if (statusVal === 'solved') return w.status === 'solved';
       return true; // 'all'
     });
     if (q) {

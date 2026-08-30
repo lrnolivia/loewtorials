@@ -145,7 +145,7 @@
     "mark-solved": {
       "group": "wrapping-up",
       "title": "Mark solved / finished",
-      "body": "<p>Every wizard player has a <strong>\"Mark solved / finished\"</strong> button in the rail. It opens a review of the exact path you just took — which steps, which branch choices, which checklist items — and asks a quick tap-only question per step (defaulting to \"went as written,\" so confirming a clean run takes zero typing). Saving downloads a <code>.md</code> summary of that run, meant to be handed to a fresh AI chat as a trace of what's already been tried.</p>",
+      "body": "<p>Every wizard player has a <strong>\"Mark solved / finished\"</strong> button in the rail. It opens a review of the exact path you just took — which steps, which branch choices, which checklist items — and asks a quick tap-only question per step (defaulting to \"went as written,\" so confirming a clean run takes zero typing). Saving keeps the summary on this site and offers copy and <code>.md</code> download actions whenever you need to share it.</p>",
       "checklist": [
         "Try opening that button now, if you want to see the review screen"
       ],
@@ -160,7 +160,7 @@
     "appearance": {
       "group": "personalizing",
       "title": "Appearance settings",
-      "body": "<p>The gear icon (top of the rail, and on the dashboard) opens settings for theme, font, background, layout width, sidebar gap, and text scale — all applied live as you adjust them, and remembered on this device.</p>",
+      "body": "<p>The paintbrush opens theme, font, corner, and background-pattern controls. The gear opens the right-side data and accessibility drawer. Changes apply live and are remembered on this device.</p>",
       "next": "tour-done"
     },
     "tour-done": {
