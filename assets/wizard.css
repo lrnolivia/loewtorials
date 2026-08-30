@@ -49,7 +49,8 @@ a.outcome-node:hover{ transform:translate3d(3px,0,0); }
    (assets/wizard-engine.js goTo()) — without it, aligning this to the
    viewport's top edge tucks it exactly behind the sticky header instead
    of below it. */
-.stage-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom: clamp(18px, 3vw, 30px); scroll-margin-top:var(--util-h); }
+.stage-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:24px; margin-bottom: clamp(18px, 3vw, 30px); scroll-margin-top:var(--util-h); }
+.guide-heading{ min-width:0; flex:1 1 auto; }
 h1.page-title{ font-family:var(--f-display); font-weight:700; font-size:clamp(1.375rem, 3.4vw, 2rem); margin:0; letter-spacing:-0.01em; }
 .page-sub{ color:var(--tx-muted); margin:8px 0 0; font-size:0.90625rem; max-width:52ch; }
 .page-subtitle{ color:var(--tx); margin:8px 0 0; font-size:1rem; font-weight:700; max-width:58ch; }
@@ -287,16 +288,15 @@ a.outcome-node:hover{ border-color:var(--a1); color:var(--a1); }
 .guide-page #railHeroMount .app-hero h1{ font-size:1.45rem; }
 .guide-page #railHeroMount .app-hero .tagline{ font-size:.8rem; }
 .guide-page.scrolled #railHeroMount .app-hero{ display:block; }
-.rail-view-toggle{ display:block; margin:0 0 18px; }
-.rail-view-toggle .rail-title{ margin-bottom:7px; }
-.rail-view-toggle .view-toggle{ display:flex; width:100%; }
-.rail-view-toggle .view-toggle button{ flex:1; }
+.stage-view-toggle{ display:flex; align-items:center; gap:10px; margin-top:15px; }
+.stage-view-toggle .rail-title{ margin:0; }
 
 @media (max-width:700px){
   .stage-top{ flex-direction:column; }
   .util-row{ flex-wrap:wrap; }
   .step-card{ padding:18px; }
   .article-card{ overflow:hidden; }
+  .stage-view-toggle{ align-items:flex-start; flex-direction:column; }
 }
 
 .confidence-banner{ display:flex; gap:12px; align-items:flex-start; border:var(--border-w) solid var(--a2); background:var(--a2-dim); border-radius:var(--radius); padding:14px 18px; margin-bottom:18px; }

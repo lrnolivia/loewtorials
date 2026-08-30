@@ -56,13 +56,6 @@
       <input type="search" id="railSearchInput" placeholder="Search" aria-label="Search guides">
       <div class="rail-search-drop" id="railSearchDrop"></div>
     </div>
-    <div class="view-toggle-row rail-view-toggle" id="viewToggleRow" style="display:none;">
-      <p class="rail-title">Reading mode</p>
-      <div class="view-toggle" id="viewToggle">
-        <button type="button" data-view="wizard">&#9776; Guided</button>
-        <button type="button" data-view="article">&para; Article</button>
-      </div>
-    </div>
     <p class="rail-title rail-nav-title" id="railTitle">Guide steps</p>
     <div data-w="railContent"></div>
     <div class="rail-actions">
@@ -79,8 +72,18 @@
     </div>
 
     <div class="stage-top">
-      <div>
+      <div class="guide-heading">
         <p class="eyebrow" data-w="phaseEyebrow">Phase</p>
+        <h1 class="page-title" id="pageTitle">Loading guide&hellip;</h1>
+        <p class="page-subtitle" id="pageSubtitle"></p>
+        <p class="page-sub" id="pageSub"></p>
+        <div class="view-toggle-row stage-view-toggle" id="viewToggleRow" style="display:none;">
+          <p class="rail-title">Reading mode</p>
+          <div class="view-toggle" id="viewToggle">
+            <button type="button" data-view="wizard">&#9776; Guided</button>
+            <button type="button" data-view="article">&para; Article</button>
+          </div>
+        </div>
       </div>
       <div class="util-row">
         <button class="icon-btn" id="editGuideBtn">&#9998; Edit info</button>
@@ -135,6 +138,9 @@
   function showError(msg) {
     stepCard.className = 'step-card load-state error';
     stepCard.textContent = msg;
+    document.getElementById('pageTitle').textContent = 'Guide not found';
+    document.getElementById('pageSubtitle').textContent = '';
+    document.getElementById('pageSub').textContent = '';
     document.getElementById('railGuideTitle').textContent = 'Guide not found';
     document.getElementById('railGuideSubtitle').textContent = '';
     document.getElementById('railGuideDescription').textContent = '';
@@ -157,6 +163,9 @@
       document.getElementById('railGuideTitle').textContent = wizard.title;
       document.getElementById('railGuideSubtitle').textContent = wizard.subtitle || '';
       document.getElementById('railGuideDescription').textContent = wizard.description || '';
+      document.getElementById('pageTitle').textContent = wizard.title;
+      document.getElementById('pageSubtitle').textContent = wizard.subtitle || '';
+      document.getElementById('pageSub').textContent = wizard.description || '';
       const compactTitle = document.getElementById('hdrGuideTitle');
       if (compactTitle) compactTitle.textContent = wizard.title;
 
@@ -286,6 +295,7 @@
           Storage.setOverride(id, patch);
           savedDefaultRef.value = patch.defaultView || null;
           document.getElementById('railGuideTitle').textContent = title;
+          document.getElementById('pageTitle').textContent = title;
           const compactTitle = document.getElementById('hdrGuideTitle');
           if (compactTitle) compactTitle.textContent = title;
           close(); showToast('Guide info saved.');

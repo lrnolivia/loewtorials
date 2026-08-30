@@ -183,11 +183,15 @@ body{
 }
 .rail-sub{ font-family:var(--f-display); font-size:1.0625rem; font-weight:600; margin:0 0 20px; color:var(--tx); }
 .rail-divider{ height:1px; background:var(--border); opacity:0.4; margin:18px 0; }
-.rail-guide-info{ margin-bottom:16px; }
-.rail-guide-title{ font-family:var(--f-display); font-size:clamp(1.15rem,1.6vw,1.5rem); line-height:1.18; margin:0 0 8px; overflow-wrap:anywhere; }
-.rail-guide-subtitle{ margin:0 0 7px; color:var(--tx); font-size:.84rem; font-weight:700; line-height:1.4; }
-.rail-guide-description{ margin:0; color:var(--tx-muted); font-size:.76rem; line-height:1.5; }
-.rail-nav-title{ margin-top:20px; }
+.rail-guide-info{ margin:2px 0 12px; }
+.rail-guide-info .rail-title{ font-size:.6rem; margin-bottom:5px; }
+.rail-guide-title{ font-family:var(--f-display); font-size:.92rem; line-height:1.2; margin:0 0 5px; overflow-wrap:anywhere; }
+.rail-guide-subtitle{ margin:0 0 4px; color:var(--tx); font-size:.7rem; font-weight:700; line-height:1.32; }
+.rail-guide-description{
+  margin:0; color:var(--tx-muted); font-size:.64rem; line-height:1.4;
+  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:4; overflow:hidden;
+}
+.rail-nav-title{ margin-top:16px; }
 .rail-actions{ display:grid; gap:9px; position:sticky; bottom:-40px; padding:16px 0 40px; margin-top:18px; border-top:1px solid var(--track); background:var(--panel); }
 .rail-actions .btn{ width:100%; justify-content:center; }
 

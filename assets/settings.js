@@ -54,12 +54,13 @@ function applyBackground(settings) {
     body.style.backgroundColor = 'var(--bg)';
   } else if (settings.background === 'glow') {
     body.style.backgroundImage = 'radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--a2) 28%, transparent), transparent 34%), radial-gradient(circle at 88% 22%, color-mix(in srgb, var(--a3) 20%, transparent), transparent 30%), radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--a1) 18%, transparent), transparent 38%)';
-    body.style.backgroundSize = '1200px 900px';
-    body.style.backgroundRepeat = 'repeat-y';
+    body.style.backgroundSize = 'auto';
+    body.style.backgroundRepeat = 'no-repeat';
     body.style.backgroundColor = 'var(--bg)';
+    body.style.backgroundAttachment = 'fixed';
   } else if (settings.background === 'rings') {
     body.style.backgroundImage = 'repeating-radial-gradient(circle at 10% 0%, transparent 0 18px, color-mix(in srgb, var(--border) 9%, transparent) 19px 20px)';
-    body.style.backgroundSize = '360px 360px';
+    body.style.backgroundSize = 'auto';
     body.style.backgroundRepeat = 'repeat';
     body.style.backgroundColor = 'var(--bg)';
   } else if (settings.background === 'custom' && settings.backgroundImage) {
@@ -67,6 +68,7 @@ function applyBackground(settings) {
     body.style.backgroundSize = 'cover';
     body.style.backgroundPosition = 'center';
     body.style.backgroundRepeat = 'no-repeat';
+    body.style.backgroundAttachment = 'fixed';
   }
 }
 
