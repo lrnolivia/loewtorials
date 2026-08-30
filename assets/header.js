@@ -84,8 +84,9 @@ function buildUtilityHTML() {
   '<header class="app-header">' +
     '<div class="utility">' +
       '<div class="utility-inner">' +
-        (onGuide ? '<button class="home-btn" id="hdrHomeBtn" title="Back" aria-label="Back">\u2190</button>' : '') +
+        (onGuide ? '<button class="home-btn" id="hdrHomeBtn" title="Home" aria-label="Go to dashboard">\u2302 <span>Home</span></button>' : '') +
         '<div class="mini-brand"><span class="mark">\u{1F9F0}</span><span class="word">loewtorials</span></div>' +
+        (onGuide ? '<div class="mini-guide-title" id="hdrGuideTitle">Guide</div>' : '') +
         '<div class="mini-specs" id="hdrMiniSpecs">' + miniSpecsHtml + '</div>' +
         '<div class="header-spacer"></div>' +
         '<div class="hsearch" id="hdrSearch">' +
@@ -173,7 +174,7 @@ function buildThemePopHTML() {
     '<input type="file" id="popBackgroundFile" accept="image/*" hidden>' +
     '<h5>Customize</h5>' +
     '<div class="customize-grid" id="popCustomizeGrid">' + customizeRows + '</div>' +
-    '<button class="btn btn-ghost btn-sm" id="popCustomizeReset" type="button" style="margin-top:6px;">Reset customization</button>' +
+    '<button class="btn btn-ghost btn-sm" id="popCustomizeReset" type="button" style="margin-top:6px;">&#8635; Reset customization</button>' +
     '<h5>Fonts</h5>' +
     fontSelect('display') + fontSelect('body') + fontSelect('mono');
 }
@@ -413,8 +414,7 @@ function wireIconButtons() {
 
   const homeBtn = document.getElementById('hdrHomeBtn');
   if (homeBtn) homeBtn.addEventListener('click', () => {
-    if (history.length > 1) history.back();
-    else location.href = 'index.html';
+    location.href = 'index.html';
   });
 
   // Threshold uses hysteresis (collapse past 70, only re-expand at the
@@ -475,11 +475,10 @@ function initHeader() {
 
   const heroMount = document.getElementById('appHeroMount');
   const railHeroMount = document.getElementById('railHeroMount');
-  if (document.body.classList.contains('guide-page') && railHeroMount && heroMount) {
+  if (document.body.classList.contains('guide-page') && railHeroMount) {
     const holder = document.createElement('div');
     holder.innerHTML = buildHeroHTML();
     railHeroMount.appendChild(holder.querySelector('.app-hero'));
-    heroMount.appendChild(holder.querySelector('.specs-bar-wrap'));
   } else if (heroMount) heroMount.innerHTML = buildHeroHTML();
 
   _themePrefs = currentThemePrefs();

@@ -167,8 +167,8 @@
     const statusBadge = w.status === 'solved' ? `<span class="status-badge solved">Solved</span>`
       : w.status === 'archived' ? `<span class="status-badge archived">Archived</span>` : '';
     const archiveAction = w.status === 'archived'
-      ? `<button data-action="unarchive" data-id="${escapeHtml(w.id)}">Restore to active</button>`
-      : `<button data-action="archive" data-id="${escapeHtml(w.id)}">Archive</button>`;
+      ? `<button data-action="unarchive" data-id="${escapeHtml(w.id)}">&#8635; Restore to active</button>`
+      : `<button data-action="archive" data-id="${escapeHtml(w.id)}">&#9633; Archive</button>`;
     return `
     <article class="wizard-card${w.status === 'solved' ? ' is-solved' : ''}" data-id="${escapeHtml(w.id)}">
       <div class="card-top">
@@ -178,12 +178,12 @@
         ${statusBadge}
         <button class="menu-btn" data-id="${escapeHtml(w.id)}" aria-label="Manage this wizard">&#8942;</button>
         <div class="card-menu" id="menu-${escapeHtml(w.id)}">
-          <button data-action="edit" data-id="${escapeHtml(w.id)}">Edit details</button>
-          <button data-action="export" data-id="${escapeHtml(w.id)}">Export JSON</button>
-          ${w._hasSource ? `<button data-action="source" data-id="${escapeHtml(w.id)}">Download source .md</button>` : ''}
+          <button data-action="edit" data-id="${escapeHtml(w.id)}">&#9998; Edit details</button>
+          <button data-action="export" data-id="${escapeHtml(w.id)}">&darr; Export JSON</button>
+          ${w._hasSource ? `<button data-action="source" data-id="${escapeHtml(w.id)}">&darr; Download source .md</button>` : ''}
           ${archiveAction}
-          <button data-action="hide" data-id="${escapeHtml(w.id)}">Hide from dashboard</button>
-          ${deletable ? `<button class="danger" data-action="delete" data-id="${escapeHtml(w.id)}">Delete</button>` : ''}
+          <button data-action="hide" data-id="${escapeHtml(w.id)}">&#9711; Hide from dashboard</button>
+          ${deletable ? `<button class="danger" data-action="delete" data-id="${escapeHtml(w.id)}">&times; Delete</button>` : ''}
         </div>
       </div>
       <h3>${escapeHtml(w.title)}</h3>
@@ -287,11 +287,11 @@
       : w.status === 'archived' ? `<span class="status-badge archived">Archived</span>` : '';
     const hiddenBadge = w.hidden ? `<span class="status-badge hidden-badge">Hidden</span>` : '';
     const archiveAction = w.status === 'archived'
-      ? `<button class="btn btn-ghost btn-sm" data-maction="unarchive" data-id="${escapeHtml(w.id)}">Restore to active</button>`
-      : `<button class="btn btn-ghost btn-sm" data-maction="archive" data-id="${escapeHtml(w.id)}">Archive</button>`;
+      ? `<button class="btn btn-ghost btn-sm" data-maction="unarchive" data-id="${escapeHtml(w.id)}">&#8635; Restore to active</button>`
+      : `<button class="btn btn-ghost btn-sm" data-maction="archive" data-id="${escapeHtml(w.id)}">&#9633; Archive</button>`;
     const hideAction = w.hidden
-      ? `<button class="btn btn-ghost btn-sm" data-maction="unhide" data-id="${escapeHtml(w.id)}">Unhide</button>`
-      : `<button class="btn btn-ghost btn-sm" data-maction="hide" data-id="${escapeHtml(w.id)}">Hide</button>`;
+      ? `<button class="btn btn-ghost btn-sm" data-maction="unhide" data-id="${escapeHtml(w.id)}">&#9673; Unhide</button>`
+      : `<button class="btn btn-ghost btn-sm" data-maction="hide" data-id="${escapeHtml(w.id)}">&#9711; Hide</button>`;
     return `
     <div class="manage-row" data-id="${escapeHtml(w.id)}">
       <div class="manage-row-main">
@@ -305,12 +305,12 @@
         <div class="manage-row-meta">${sourceLabel}${w.date ? ' \u00b7 ' + escapeHtml(w.date) : ''}</div>
       </div>
       <div class="manage-row-actions">
-        <button class="btn btn-ghost btn-sm" data-maction="edit" data-id="${escapeHtml(w.id)}">Edit details</button>
+        <button class="btn btn-ghost btn-sm" data-maction="edit" data-id="${escapeHtml(w.id)}">&#9998; Edit details</button>
         ${archiveAction}
         ${hideAction}
-        <button class="btn btn-ghost btn-sm" data-maction="export" data-id="${escapeHtml(w.id)}">Export JSON</button>
-        ${w._hasSource ? `<button class="btn btn-ghost btn-sm" data-maction="source" data-id="${escapeHtml(w.id)}">Source .md</button>` : ''}
-        ${deletable ? `<button class="btn btn-ghost btn-sm" data-maction="delete" data-id="${escapeHtml(w.id)}" style="color:var(--danger);">Delete</button>` : ''}
+        <button class="btn btn-ghost btn-sm" data-maction="export" data-id="${escapeHtml(w.id)}">&darr; Export JSON</button>
+        ${w._hasSource ? `<button class="btn btn-ghost btn-sm" data-maction="source" data-id="${escapeHtml(w.id)}">&darr; Source .md</button>` : ''}
+        ${deletable ? `<button class="btn btn-ghost btn-sm" data-maction="delete" data-id="${escapeHtml(w.id)}" style="color:var(--danger);">&times; Delete</button>` : ''}
       </div>
     </div>`;
   }

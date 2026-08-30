@@ -229,9 +229,10 @@ a.outcome-node:hover{ border-color:var(--a1); color:var(--a1); }
 .guide-page #railHeroMount .app-hero h1{ font-size:1.45rem; }
 .guide-page #railHeroMount .app-hero .tagline{ font-size:.8rem; }
 .guide-page.scrolled #railHeroMount .app-hero{ display:block; }
-.guide-page #appHeroMount{ width:auto; }
-.guide-page #appHeroMount .specs-bar-wrap{ padding-bottom:24px; }
-.guide-page.scrolled #appHeroMount .specs-bar-wrap{ display:block; }
+.rail-view-toggle{ display:block; margin:0 0 18px; }
+.rail-view-toggle .rail-title{ margin-bottom:7px; }
+.rail-view-toggle .view-toggle{ display:flex; width:100%; }
+.rail-view-toggle .view-toggle button{ flex:1; }
 
 @media (max-width:700px){
   .stage-top{ flex-direction:column; }

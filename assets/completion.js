@@ -275,7 +275,7 @@ function buildCompletionModalHTML(entries) {
 
       <div class="review-import-row">
         <p>Have a summary from an AI chat (or an earlier export from here)? Upload it and matching answers below will be pre-filled.</p>
-        <button class="btn btn-ghost btn-sm" id="completion-import-btn" type="button">Import from .md</button>
+        <button class="btn btn-ghost btn-sm" id="completion-import-btn" type="button">&uarr; Import from .md</button>
         <input type="file" id="completion-import-file" accept=".md,text/markdown,text/plain" style="display:none;">
         <span class="review-import-status" id="completion-import-status"></span>
       </div>
@@ -297,8 +297,8 @@ function buildCompletionModalHTML(entries) {
       </div>
 
       <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
-        <button class="btn btn-ghost" id="completion-cancel">Cancel</button>
-        <button class="btn btn-primary" id="completion-save">Save &amp; generate summary</button>
+        <button class="btn btn-ghost" id="completion-cancel">&times; Cancel</button>
+        <button class="btn btn-primary" id="completion-save">&#10003; Save &amp; generate summary</button>
       </div>
     </div>
   </div>`;
@@ -422,7 +422,7 @@ function initCompletionModal(wizardCtx) {
       <h2>Saved on this site</h2>
       <p class="hint">This completion is stored with the guide. Copy it now or download the Markdown file whenever you need to share it.</p>
       <div class="field"><label>Generated summary</label><textarea id="completion-result-text" style="min-height:280px"></textarea></div>
-      <div class="spec-actions"><button class="btn btn-ghost" id="completion-copy" type="button">Copy summary</button><button class="btn btn-primary" id="completion-download" type="button">Download .md</button></div>`;
+      <div class="spec-actions"><button class="btn btn-ghost" id="completion-copy" type="button">&#10697; Copy summary</button><button class="btn btn-primary" id="completion-download" type="button">&darr; Download .md</button></div>`;
     document.getElementById('completion-result-text').value = record.generatedMd;
     document.getElementById('completion-result-close').onclick = close;
     document.getElementById('completion-copy').onclick = () => navigator.clipboard.writeText(record.generatedMd).then(() => window.showToast && window.showToast('Summary copied.'));

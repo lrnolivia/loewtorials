@@ -54,13 +54,12 @@ function applyBackground(settings) {
     body.style.backgroundColor = 'var(--bg)';
   } else if (settings.background === 'glow') {
     body.style.backgroundImage = 'radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--a2) 28%, transparent), transparent 34%), radial-gradient(circle at 88% 22%, color-mix(in srgb, var(--a3) 20%, transparent), transparent 30%), radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--a1) 18%, transparent), transparent 38%)';
-    body.style.backgroundSize = 'auto';
-    body.style.backgroundRepeat = 'no-repeat';
+    body.style.backgroundSize = '1200px 900px';
+    body.style.backgroundRepeat = 'repeat-y';
     body.style.backgroundColor = 'var(--bg)';
-    body.style.backgroundAttachment = 'fixed';
   } else if (settings.background === 'rings') {
     body.style.backgroundImage = 'repeating-radial-gradient(circle at 10% 0%, transparent 0 18px, color-mix(in srgb, var(--border) 9%, transparent) 19px 20px)';
-    body.style.backgroundSize = 'auto';
+    body.style.backgroundSize = '360px 360px';
     body.style.backgroundRepeat = 'repeat';
     body.style.backgroundColor = 'var(--bg)';
   } else if (settings.background === 'custom' && settings.backgroundImage) {
@@ -68,7 +67,6 @@ function applyBackground(settings) {
     body.style.backgroundSize = 'cover';
     body.style.backgroundPosition = 'center';
     body.style.backgroundRepeat = 'no-repeat';
-    body.style.backgroundAttachment = 'fixed';
   }
 }
 
@@ -119,7 +117,7 @@ function buildSettingsModalHTML() {
       '<div class="divider">containerfile</div>' +
       '<p class="hint">Upload your build\'s Containerfile so wizard steps can flag which parts already apply to your setup.</p>' +
       '<div class="spec-actions">' +
-        '<button class="btn btn-ghost btn-sm" id="open-containerfile-btn">Manage Containerfile</button>' +
+        '<button class="btn btn-ghost btn-sm" id="open-containerfile-btn">&#9998; Manage Containerfile</button>' +
       '</div>' +
 
       '<div class="divider">sync</div>' +
@@ -129,25 +127,25 @@ function buildSettingsModalHTML() {
         '<input type="password" id="sync-password-field" placeholder="Enter to set/change" autocomplete="new-password">' +
       '</div>' +
       '<div class="spec-actions">' +
-        '<button class="btn btn-ghost btn-sm" id="sync-save-btn" type="button">Save &amp; reconnect</button>' +
-        '<button class="btn btn-ghost btn-sm" id="sync-now-btn" type="button">Sync now</button>' +
-        '<button class="btn btn-ghost btn-sm" id="sync-forget-btn" type="button">Forget on this device</button>' +
+        '<button class="btn btn-ghost btn-sm" id="sync-save-btn" type="button">&#10003; Save &amp; reconnect</button>' +
+        '<button class="btn btn-ghost btn-sm" id="sync-now-btn" type="button">&#8635; Sync now</button>' +
+        '<button class="btn btn-ghost btn-sm" id="sync-forget-btn" type="button">&times; Forget on this device</button>' +
       '</div>' +
 
       '<div class="divider">backup</div>' +
       '<div class="spec-actions">' +
-        '<button class="btn btn-ghost btn-sm" id="settings-export">Export everything (.json)</button>' +
-        '<button class="btn btn-ghost btn-sm" id="settings-export-reports">Export reports (.md)</button>' +
+        '<button class="btn btn-ghost btn-sm" id="settings-export">&darr; Export everything (.json)</button>' +
+        '<button class="btn btn-ghost btn-sm" id="settings-export-reports">&darr; Export reports (.md)</button>' +
         '<label class="btn btn-ghost btn-sm" id="settings-import-label">' +
-          'Import backup' +
+          '&uarr; Import backup' +
           '<input type="file" id="settings-import-input" accept="application/json" style="display:none">' +
         '</label>' +
       '</div>' +
 
       '<div class="divider"></div>' +
       '<div class="spec-actions">' +
-        '<button class="btn btn-ghost btn-sm" id="settings-reset">Reset to default</button>' +
-        '<button class="btn btn-primary btn-sm" id="settings-done">Done</button>' +
+        '<button class="btn btn-ghost btn-sm" id="settings-reset">&#8635; Reset to default</button>' +
+        '<button class="btn btn-primary btn-sm" id="settings-done">&#10003; Done</button>' +
       '</div>' +
     '</div>' +
   '</div>';
