@@ -159,7 +159,7 @@ pre.code{
 .reset-row button:hover{ color:var(--danger); }
 
 /* notes drawer */
-.notes-drawer{ position:fixed; right:0; top:0; bottom:0; width:min(340px,90vw); background:var(--panel); border-left:1px solid var(--border); transform:translate3d(100%,0,0); transition:transform var(--motion-medium) var(--ease-standard); z-index:50; padding:22px; display:flex; flex-direction:column; gap:12px; box-shadow:-20px 0 50px rgba(0,0,0,.22); }
+.notes-drawer{ position:fixed; right:12px; top:calc(var(--util-h) + 16px); bottom:16px; width:min(340px,calc(90vw - 12px)); background:var(--panel); border:1px solid var(--border); transform:translate3d(calc(100% + 12px),0,0); transition:transform var(--motion-medium) var(--ease-standard); z-index:50; padding:22px; display:flex; flex-direction:column; gap:12px; box-shadow:-20px 0 50px rgba(0,0,0,.22); }
 .notes-drawer.open{ transform:translateX(0); }
 .notes-drawer h3{ font-family:var(--f-display); margin:0; font-size:1rem; }
 .notes-drawer p{ color:var(--tx-muted); font-size:0.8125rem; margin:0; }

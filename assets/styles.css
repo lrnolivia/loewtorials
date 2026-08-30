@@ -301,7 +301,7 @@ button, input, textarea, select{ font-family:inherit; }
 .modal-backdrop{
   position:fixed; inset:0; background:rgba(4,8,10,0.66); z-index:80;
   display:flex; align-items:flex-start; justify-content:center;
-  padding:6vh 16px; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; touch-action:pan-y;
+  padding:calc(var(--util-h) + 24px) 16px 24px; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; touch-action:pan-y;
   opacity:1; visibility:visible; transition:opacity var(--motion-fast) var(--ease-out-soft), visibility 0s linear 0s;
 }
 .modal-backdrop.hidden{ display:flex; opacity:0; visibility:hidden; pointer-events:none; transition:opacity var(--motion-fast) var(--ease-in-soft), visibility 0s linear var(--motion-fast); }
@@ -454,9 +454,8 @@ button, input, textarea, select{ font-family:inherit; }
 .app-header{ display:contents; }
 .utility{
   position:sticky; top:0; z-index:100; height:var(--util-h);
-  background:var(--panel); border-bottom:var(--border-w) solid var(--border);
+  background:var(--panel); border-bottom:1px solid var(--border);
 }
-[data-style="dopamine"] .utility{ border-bottom:none; }
 /* Inner content is width-capped to the same --shell-max-width as the
    sidebar+content grid below, so the topbar's icons line up with the
    grid instead of spanning the full viewport while the content beneath
