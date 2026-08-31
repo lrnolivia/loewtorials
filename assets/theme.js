@@ -51,8 +51,8 @@ const FAMILIES = {
     a1: '#C79B4B', a1t: '#2B2924',
     a1TextLight: '#664C1D',
     cardAccentText: '#211E1A',
-    a2: '#7C8C74', a2t: '#2B2924',
-    a3: '#B5654F', a3t: '#F7F1EC', // takes light text, not dark
+    a2: '#7C8C74', a2t: '#211E1A',
+    a3: '#A15442', a3t: '#F7F1EC', // darkened slightly so small light text stays AA
     cardt: '#211E1A',
     light: { bg: '#DAD4C8', panel: '#C9C2B2', surf: '#EFEBE2', surft: '#2B2924', border: '#2B2924', tx: '#2B2924' },
     dark:  { bg: '#211E1A', panel: '#2E2A24', surf: '#3B362E', surft: '#EDE7DC', border: '#EDE7DC', tx: '#EDE7DC' }

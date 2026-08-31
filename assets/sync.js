@@ -40,12 +40,16 @@ function showSyncOverlay(errorMsg) {
   else { err.style.display = 'none'; }
   const input = document.getElementById('sync-password-input');
   input.value = '';
+  if (window.ModalFocus) ModalFocus.activate(document.getElementById('sync-overlay'), { initialFocus: input });
   input.focus();
 }
 
 function hideSyncOverlay() {
   const overlay = document.getElementById('sync-overlay');
-  if (overlay) overlay.classList.add('hidden');
+  if (overlay) {
+    if (window.ModalFocus) ModalFocus.deactivate(overlay);
+    overlay.classList.add('hidden');
+  }
 }
 
 // The single entry point. Resolves once this device either has a

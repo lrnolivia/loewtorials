@@ -193,7 +193,10 @@
 
   function open(options) {
     const old = document.getElementById('help-backdrop');
-    if (old) old.remove();
+    if (old) {
+      if (window.ModalFocus) ModalFocus.deactivate(old);
+      old.remove();
+    }
     const wrap = document.createElement('div');
     wrap.innerHTML = modalHtml();
     document.body.appendChild(wrap.firstElementChild);
@@ -216,15 +219,14 @@
       statusEl.lastElementChild.textContent = message;
     }
 
-    function onEscape(event) { if (event.key === 'Escape' && document.body.contains(backdrop)) close(); }
     function close() {
-      document.removeEventListener('keydown', onEscape);
+      if (window.ModalFocus) ModalFocus.deactivate(backdrop);
       backdrop.remove();
     }
     backdrop.querySelector('.modal-close').onclick = close;
     backdrop.onclick = function (event) { if (event.target === backdrop) close(); };
-    document.addEventListener('keydown', onEscape);
-    setTimeout(function () { questionEl.focus(); }, 0);
+    if (window.ModalFocus) ModalFocus.activate(backdrop, { onEscape: close, initialFocus: questionEl });
+    else setTimeout(function () { questionEl.focus(); }, 0);
 
     function requestPackage() {
       return buildHelpMarkdown(options, questionEl.value.trim(), terminalEl.value.trim(), Array.from(filesEl.files || []));

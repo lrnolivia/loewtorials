@@ -64,11 +64,10 @@
      settings.js from stored settings before first paint. */
   --text-scale: 1;
 
-  /* layout: shell/content width and the gap between the wizard-player
-     rail and its stage. Overridden inline by settings.js. Prose inside
-     the stage still caps its own line length separately (see wizard.css
-     .step-body) so wide screens don't produce unreadable paragraph widths
-     even when the shell itself is wide. */
+  /* Fixed gap between the wizard-player rail and its stage. Prose inside
+     the stage caps its own line length separately (see wizard.css
+     .step-body), keeping wide screens readable while the shell fills the
+     available page width. */
   --sidebar-gap: 48px;
 
   /* height of the persistent utility bar (assets/header.js) — the rail
@@ -109,6 +108,7 @@ body{
   min-height:100vh;
   line-height:1.5;
 }
+body.modal-open{ overflow:hidden; }
 
 @media (prefers-reduced-motion: reduce){
   *, *::before, *::after{
@@ -117,7 +117,6 @@ body{
     transition-duration:0.01ms !important;
     scroll-behavior:auto !important;
   }
-  html.motion-page-snap, body.motion-page-snap{ scroll-snap-type:none; }
 }
 
 /* Prevent iOS drag ghosts on cards/chrome without disabling selection
@@ -590,6 +589,12 @@ body.scrolled .specs-bar-wrap{ display:none; }
 .theme-pop-anchor.open .theme-pop{ opacity:1; visibility:visible; pointer-events:auto; transform:translate3d(0,0,0) scale(1); transition-delay:0s; }
 .theme-pop h5{ margin:14px 0 8px; font-family:var(--f-mono); font-size:0.65rem; text-transform:uppercase; letter-spacing:.05em; color:var(--surft-muted); }
 .theme-pop h5:first-child{ margin-top:0; }
+@media (max-width:480px){
+  .theme-pop{
+    position:fixed; top:calc(var(--util-h) - 4px); left:8px; right:8px; width:auto;
+    max-height:calc(100dvh - var(--util-h) - 8px); transform-origin:top center;
+  }
+}
 
 /* generic 2-option switch: style (Neo/Dopamine), mode (Light/Dark),
    corners (Square/Rounded) all reuse this — a single pill, two labeled

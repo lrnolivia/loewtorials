@@ -1,5 +1,5 @@
 // settings.js
-// The settings modal now only covers layout/background + sync + backup
+// The settings modal now only covers text size + sync + backup
 // + the Containerfile-detection entry point. Theme (style/color/mode/
 // corners/customize/fonts) moved to the paintbrush popover in the
 // persistent header — see assets/header.js — since it needed to be
@@ -90,7 +90,7 @@ function applyAppearance(rawSettings) {
 }
 
 // Called once, very early (see the <head> snippet in index.html /
-// wizard.html) so layout/background don't flash to default before the
+// wizard.html) so text scale/background don't flash to default before the
 // full script loads. Theme (color/font) boot is handled separately by
 // theme.js's bootTheme() — see the same <head> snippet.
 function bootAppearance() {
@@ -99,7 +99,7 @@ function bootAppearance() {
 }
 
 // ---------------------------------------------------------------------
-// Settings modal (layout/background + sync + backup)
+// Settings modal (text size + sync + backup)
 // ---------------------------------------------------------------------
 function buildSettingsModalHTML() {
   return '' +
@@ -295,8 +295,12 @@ function initSettingsModal() {
     syncFormFromCurrent();
     refreshSyncStatus();
     backdrop.classList.remove('hidden');
+    if (window.ModalFocus) ModalFocus.activate(backdrop, { onEscape: close, initialFocus: '#settings-close' });
   }
-  function close() { backdrop.classList.add('hidden'); }
+  function close() {
+    if (window.ModalFocus) ModalFocus.deactivate(backdrop);
+    backdrop.classList.add('hidden');
+  }
 
   document.getElementById('settings-close').addEventListener('click', close);
   document.getElementById('settings-done').addEventListener('click', close);

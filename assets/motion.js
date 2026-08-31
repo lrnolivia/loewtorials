@@ -25,16 +25,9 @@
     if (io) io.observe(el); else el.classList.add('motion-visible');
   }
 
-  function updatePageSnap() {
-    document.documentElement.classList.remove('motion-page-snap');
-    document.body.classList.remove('motion-page-snap');
-    document.querySelectorAll('.snap-target').forEach(el => el.classList.remove('snap-target'));
-  }
-
   function scan(root) {
     if (root.matches && root.matches(selector)) reveal(root);
     if (root.querySelectorAll) root.querySelectorAll(selector).forEach(reveal);
-    updatePageSnap();
   }
 
   function swap(el) {
@@ -75,7 +68,7 @@
       document.documentElement.classList.toggle('motion-paused', document.hidden));
   }
 
-  window.Motion = { scan, swap, updatePageSnap, prefersReducedMotion: () => reduce.matches };
+  window.Motion = { scan, swap, prefersReducedMotion: () => reduce.matches };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 })();

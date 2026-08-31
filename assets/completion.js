@@ -317,7 +317,10 @@ function initCompletionModal(wizardCtx) {
   document.body.appendChild(wrap.firstElementChild);
 
   const backdrop = document.getElementById('completion-backdrop');
-  const close = () => backdrop.remove();
+  const close = () => {
+    if (window.ModalFocus) ModalFocus.deactivate(backdrop);
+    backdrop.remove();
+  };
 
   document.getElementById('completion-close').onclick = close;
   document.getElementById('completion-cancel').onclick = close;
@@ -419,17 +422,19 @@ function initCompletionModal(wizardCtx) {
 
     const modal = backdrop.querySelector('.modal');
     modal.innerHTML = `<button class="modal-close" id="completion-result-close" aria-label="Close">&times;</button>
-      <h2>Saved on this site</h2>
+      <h2 id="completion-title">Saved on this site</h2>
       <p class="hint">This completion is stored with the guide. Copy it now or download the Markdown file whenever you need to share it.</p>
-      <div class="field"><label>Generated summary</label><textarea id="completion-result-text" style="min-height:280px"></textarea></div>
+      <div class="field"><label for="completion-result-text">Generated summary</label><textarea id="completion-result-text" style="min-height:280px"></textarea></div>
       <div class="spec-actions"><button class="btn btn-ghost" id="completion-copy" type="button">&#10697; Copy summary</button><button class="btn btn-primary" id="completion-download" type="button">&darr; Download .md</button></div>`;
     document.getElementById('completion-result-text').value = record.generatedMd;
     document.getElementById('completion-result-close').onclick = close;
     document.getElementById('completion-copy').onclick = () => navigator.clipboard.writeText(record.generatedMd).then(() => window.showToast && window.showToast('Summary copied.'));
     document.getElementById('completion-download').onclick = () => Storage.downloadText(wizardCtx.id + '-solved-' + record.date + '.md', record.generatedMd);
+    requestAnimationFrame(() => document.getElementById('completion-result-close').focus());
     if (window.showToast) window.showToast('Marked solved and saved.');
     if (window.onCompletionSaved) window.onCompletionSaved(record);
   };
 
   backdrop.classList.remove('hidden');
+  if (window.ModalFocus) ModalFocus.activate(backdrop, { onEscape: close, initialFocus: '#completion-close' });
 }

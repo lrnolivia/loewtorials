@@ -268,15 +268,20 @@
   const manageList = document.getElementById('manageList');
   const manageSearchInput = document.getElementById('manageSearchInput');
   const manageStatusSelect = document.getElementById('manageStatusSelect');
+  function closeManageModal() {
+    if (window.ModalFocus) ModalFocus.deactivate(manageModal);
+    manageModal.classList.add('hidden');
+  }
 
   document.getElementById('manageWizardsBtn').addEventListener('click', () => {
     manageModal.classList.remove('hidden');
     manageSearchInput.value = '';
     manageStatusSelect.value = 'all';
     renderManageList();
+    if (window.ModalFocus) ModalFocus.activate(manageModal, { onEscape: closeManageModal, initialFocus: manageSearchInput });
   });
-  document.getElementById('manageModalClose').addEventListener('click', () => manageModal.classList.add('hidden'));
-  manageModal.addEventListener('click', e => { if (e.target === manageModal) manageModal.classList.add('hidden'); });
+  document.getElementById('manageModalClose').addEventListener('click', closeManageModal);
+  manageModal.addEventListener('click', e => { if (e.target === manageModal) closeManageModal(); });
   manageSearchInput.addEventListener('input', renderManageList);
   manageStatusSelect.addEventListener('change', renderManageList);
 
@@ -348,6 +353,10 @@
   // ---------------- edit modal ----------------
   const editModal = document.getElementById('editModal');
   let editingId = null;
+  function closeEditModal() {
+    if (window.ModalFocus) ModalFocus.deactivate(editModal);
+    editModal.classList.add('hidden');
+  }
   function openEditModal(id, meta) {
     editingId = id;
     document.getElementById('editTitleInput').value = meta.title || '';
@@ -355,9 +364,10 @@
     document.getElementById('editTags').value = (meta.tags || []).join(', ');
     document.getElementById('editDate').value = meta.date || '';
     editModal.classList.remove('hidden');
+    if (window.ModalFocus) ModalFocus.activate(editModal, { onEscape: closeEditModal, initialFocus: '#editTitleInput', returnFocus: manageSearchInput });
   }
-  document.getElementById('editCancel').addEventListener('click', () => editModal.classList.add('hidden'));
-  document.getElementById('editModalClose').addEventListener('click', () => editModal.classList.add('hidden'));
+  document.getElementById('editCancel').addEventListener('click', closeEditModal);
+  document.getElementById('editModalClose').addEventListener('click', closeEditModal);
   document.getElementById('editSave').addEventListener('click', () => {
     const title = document.getElementById('editTitleInput').value.trim();
     if (!title) { showToast('Title can\'t be empty.', true); return; }
@@ -365,7 +375,7 @@
     const tags = document.getElementById('editTags').value.split(',').map(t => t.trim()).filter(Boolean);
     const date = document.getElementById('editDate').value.trim();
     Storage.setOverride(editingId, { title, category, tags, date });
-    editModal.classList.add('hidden');
+    closeEditModal();
     refresh();
     if (!manageModal.classList.contains('hidden')) renderManageList();
     showToast('Saved.');
@@ -373,8 +383,16 @@
 
   // ---------------- add-wizard modal ----------------
   const addModal = document.getElementById('addModal');
-  document.getElementById('newWizardBtn').addEventListener('click', () => { addModal.classList.remove('hidden'); resetAddModal(); });
-  document.getElementById('addModalClose').addEventListener('click', () => addModal.classList.add('hidden'));
+  function closeAddModal() {
+    if (window.ModalFocus) ModalFocus.deactivate(addModal);
+    addModal.classList.add('hidden');
+  }
+  document.getElementById('newWizardBtn').addEventListener('click', () => {
+    addModal.classList.remove('hidden');
+    resetAddModal();
+    if (window.ModalFocus) ModalFocus.activate(addModal, { onEscape: closeAddModal, initialFocus: '#addModalClose' });
+  });
+  document.getElementById('addModalClose').addEventListener('click', closeAddModal);
 
   // Three panes share the modal: paneUpload/paneGenerate are switched by the
   // visible tabs, paneReview is a third step reached only via the "Review"
@@ -593,7 +611,7 @@
       Storage.saveCustomWizard(data);
       added++;
     });
-    addModal.classList.add('hidden');
+    closeAddModal();
     showToast(added === 1 ? 'Wizard added.' : `${added} wizards added.`);
     refresh();
   });

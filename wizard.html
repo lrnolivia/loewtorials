@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="assets/wizard.css">
 <script src="assets/storage.js"></script>
 <script src="assets/theme.js"></script>
+<script src="assets/modal.js"></script>
 <script src="assets/sync.js"></script>
 <script>
 // See index.html for why this runs this early — avoids a flash of
@@ -93,7 +94,7 @@
 <button class="back-to-top" id="backToTop" type="button">&uarr; Back to top</button>
 <div class="pull-refresh" id="pullRefresh" aria-hidden="true"><span>&#8635;</span> Pull to refresh</div>
 
-<div class="notes-drawer" id="notesDrawer" role="dialog" aria-modal="false" aria-label="Notes" aria-hidden="true">
+<div class="notes-drawer" id="notesDrawer" role="dialog" aria-modal="false" aria-label="Notes" aria-hidden="true" inert>
   <h3>Notes</h3>
   <p>Jot down anything worth remembering as you go. Nothing here is saved after you close the tab.</p>
   <textarea id="notesArea" placeholder="Notes..."></textarea>
@@ -235,7 +236,6 @@
             });
             engine.render();
           }
-          if (window.Motion) Motion.updatePageSnap();
         };
         paint();
       }
@@ -245,7 +245,10 @@
       });
       function openEditInfo() {
         const existing = document.getElementById('guide-edit-backdrop');
-        if (existing) existing.remove();
+        if (existing) {
+          if (window.ModalFocus) ModalFocus.deactivate(existing);
+          existing.remove();
+        }
         const meta = Object.assign({}, wizard, Storage.getOverrides()[id] || {});
         const reports = Storage.getCompletionsFor(id);
         const latestReport = reports.length ? reports[reports.length - 1] : null;
@@ -281,7 +284,10 @@
           document.getElementById('guide-report-copy').onclick = () => navigator.clipboard.writeText(latestReport.generatedMd || generateCompletionMd(wizard.title, latestReport)).then(() => showToast('Summary copied.'));
           document.getElementById('guide-report-download').onclick = () => Storage.downloadText(id + '-report-' + latestReport.date + '.md', latestReport.generatedMd || generateCompletionMd(wizard.title, latestReport));
         }
-        const close = () => backdrop.remove();
+        const close = () => {
+          if (window.ModalFocus) ModalFocus.deactivate(backdrop);
+          backdrop.remove();
+        };
         backdrop.querySelector('.modal-close').onclick = close;
         backdrop.querySelector('[data-close]').onclick = close;
         backdrop.onclick = e => { if (e.target === backdrop) close(); };
@@ -302,6 +308,7 @@
           if (compactTitle) compactTitle.textContent = title;
           close(); showToast('Guide info saved.');
         };
+        if (window.ModalFocus) ModalFocus.activate(backdrop, { onEscape: close, initialFocus: '#guide-edit-title' });
       }
       document.getElementById('editGuideBtn').addEventListener('click', openEditInfo);
 
@@ -345,7 +352,10 @@
   backdrop.addEventListener('click', () => { rail.classList.remove('open'); backdrop.classList.remove('open'); });
 
   const notes = document.getElementById('notesDrawer');
+  let notesTrigger = null;
   const openNotesDrawer = () => {
+    notesTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    notes.removeAttribute('inert');
     notes.classList.add('open');
     notes.setAttribute('aria-hidden', 'false');
     setTimeout(() => document.getElementById('notesArea').focus(), 0);
@@ -353,10 +363,13 @@
   const closeNotesDrawer = () => {
     notes.classList.remove('open');
     notes.setAttribute('aria-hidden', 'true');
+    notes.setAttribute('inert', '');
+    if (notesTrigger && notesTrigger.isConnected) notesTrigger.focus();
   };
   document.getElementById('openNotes').addEventListener('click', openNotesDrawer);
   document.getElementById('openNotesDesktop').addEventListener('click', openNotesDrawer);
   document.getElementById('closeNotes').addEventListener('click', closeNotesDrawer);
+  notes.addEventListener('keydown', event => { if (event.key === 'Escape') closeNotesDrawer(); });
 })();
 </script>
 </body>

@@ -261,7 +261,7 @@ const Storage = {
   },
 
   // ---------------------------------------------------------------------
-  // Appearance / layout settings (theme, fonts, background, width, scale)
+  // Appearance settings (background and text scale)
   // ---------------------------------------------------------------------
   getSettings() { return readJSON(LS_SETTINGS, {}); },
 

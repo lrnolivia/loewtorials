@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="assets/dashboard.css">
 <script src="assets/storage.js"></script>
 <script src="assets/theme.js"></script>
+<script src="assets/modal.js"></script>
 <script src="assets/sync.js"></script>
 <script>
 // Applied before the rest of the page paints, so appearance settings
@@ -48,7 +49,7 @@
     <button class="btn btn-primary btn-sm" id="newWizardBtn" style="width:100%; justify-content:center; margin-bottom:8px;">+ New wizard</button>
     <button class="btn btn-ghost btn-sm" id="manageWizardsBtn" style="width:100%; justify-content:center; margin-bottom:18px;">&#9776; Manage wizards</button>
 
-    <nav class="dash-nav" id="viewTabs">
+    <nav class="dash-nav" id="viewTabs" aria-label="Dashboard filters">
       <button data-status="all" class="active">&#9673; All wizards <span class="count" id="countAll"></span></button>
       <button data-status="active">&#9654; Active <span class="count" id="countActive"></span></button>
       <button data-status="solved">&#10003; Solved <span class="count" id="countSolved"></span></button>
@@ -57,7 +58,7 @@
 
     <div class="rail-divider"></div>
     <p class="rail-title">Categories</p>
-    <nav class="dash-nav dash-nav-categories" id="categoryNav"></nav>
+    <nav class="dash-nav dash-nav-categories" id="categoryNav" aria-label="Categories"></nav>
   </aside>
 
   <main class="stage dash-content">

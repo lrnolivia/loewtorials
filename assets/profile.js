@@ -134,13 +134,22 @@ function openContainerfileModal() {
     _cfModalInited = true;
   }
   renderContainerfileSummary(document.getElementById('cf-summary'));
-  document.getElementById('cf-backdrop').classList.remove('hidden');
+  const backdrop = document.getElementById('cf-backdrop');
+  backdrop.classList.remove('hidden');
+  if (window.ModalFocus) ModalFocus.activate(backdrop, { onEscape: closeContainerfileModal, initialFocus: '#cf-close' });
 }
 window.openContainerfileModal = openContainerfileModal;
 
+function closeContainerfileModal() {
+  const backdrop = document.getElementById('cf-backdrop');
+  if (!backdrop) return;
+  if (window.ModalFocus) ModalFocus.deactivate(backdrop);
+  backdrop.classList.add('hidden');
+}
+
 function wireContainerfileModal() {
   const backdrop = document.getElementById('cf-backdrop');
-  const close = () => backdrop.classList.add('hidden');
+  const close = closeContainerfileModal;
   document.getElementById('cf-close').addEventListener('click', close);
   document.getElementById('cf-done').addEventListener('click', close);
   backdrop.addEventListener('click', e => { if (e.target === backdrop) close(); });
