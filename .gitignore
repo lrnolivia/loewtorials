@@ -5,3 +5,5 @@
 .env.*
 !.env.example
 
+# Wrangler's local cache/state is generated during preview and dry-run checks.
+.wrangler/

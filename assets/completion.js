@@ -268,9 +268,9 @@ function buildCompletionModalHTML(entries) {
   const stepsHtml = entries.map(renderReviewEntryHtml).join('');
   return `
   <div class="modal-backdrop hidden" id="completion-backdrop">
-    <div class="modal" style="max-width:720px;">
+    <div class="modal" style="max-width:720px;" role="dialog" aria-modal="true" aria-labelledby="completion-title">
       <button class="modal-close" id="completion-close" aria-label="Close">&times;</button>
-      <h2>Mark solved / finished</h2>
+      <h2 id="completion-title">Mark solved / finished</h2>
       <p class="hint">Everything below already defaults to "went as written" \u2014 tap anything that didn't, or just hit Save. This gets saved as a per-run summary you can hand back to Claude or ChatGPT later.</p>
 
       <div class="review-import-row">

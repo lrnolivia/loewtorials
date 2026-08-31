@@ -131,7 +131,7 @@
 .add-pane{ display:none; }
 .add-pane.active{ display:block; }
 
-/* .spec-actions, .preview-box and .parse-errors moved to styles.css —
+/* .spec-actions and .preview-box moved to styles.css —
    settings.js (Layout & data modal's Containerfile/Sync/Backup button
    rows) and profile.js (spec preview) both use these classes and both
    run on wizard.html too, which never loaded dashboard.css. They were

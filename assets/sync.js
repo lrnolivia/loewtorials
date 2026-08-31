@@ -9,11 +9,11 @@
 function buildSyncOverlayHTML() {
   return '' +
     '<div class="modal-backdrop" id="sync-overlay">' +
-      '<div class="modal" style="max-width:380px;">' +
-        '<h2>Unlock loewtorials</h2>' +
+      '<div class="modal" style="max-width:380px;" role="dialog" aria-modal="true" aria-labelledby="sync-title">' +
+        '<h2 id="sync-title">Unlock loewtorials</h2>' +
         '<p class="hint" id="sync-hint">Enter the site password to sync your wizards, settings, and progress from the server.</p>' +
         '<div class="field">' +
-          '<label>Password</label>' +
+          '<label for="sync-password-input">Password</label>' +
           '<input type="password" id="sync-password-input" autocomplete="current-password">' +
         '</div>' +
         '<p class="hint" id="sync-error" style="color:var(--danger); display:none;"></p>' +

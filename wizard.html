@@ -93,7 +93,7 @@
 <button class="back-to-top" id="backToTop" type="button">&uarr; Back to top</button>
 <div class="pull-refresh" id="pullRefresh" aria-hidden="true"><span>&#8635;</span> Pull to refresh</div>
 
-<div class="notes-drawer" id="notesDrawer" aria-label="Notes">
+<div class="notes-drawer" id="notesDrawer" role="dialog" aria-modal="false" aria-label="Notes" aria-hidden="true">
   <h3>Notes</h3>
   <p>Jot down anything worth remembering as you go. Nothing here is saved after you close the tab.</p>
   <textarea id="notesArea" placeholder="Notes..."></textarea>
@@ -250,12 +250,12 @@
         const reports = Storage.getCompletionsFor(id);
         const latestReport = reports.length ? reports[reports.length - 1] : null;
         const wrap = document.createElement('div');
-        wrap.innerHTML = `<div class="modal-backdrop" id="guide-edit-backdrop"><div class="modal">
+        wrap.innerHTML = `<div class="modal-backdrop" id="guide-edit-backdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="guide-edit-title-label">
           <button class="modal-close" type="button" aria-label="Close">&times;</button>
-          <h2>Edit info</h2><p class="hint">Update how this guide appears. Content and steps are unchanged.</p>
-          <div class="field"><label>Title</label><input type="text" id="guide-edit-title"></div>
-          <div class="field"><label>Category</label><input type="text" id="guide-edit-category"></div>
-          <div class="field"><label>Tags</label><input type="text" id="guide-edit-tags"></div>
+          <h2 id="guide-edit-title-label">Edit info</h2><p class="hint">Update how this guide appears. Content and steps are unchanged.</p>
+          <div class="field"><label for="guide-edit-title">Title</label><input type="text" id="guide-edit-title"></div>
+          <div class="field"><label for="guide-edit-category">Category</label><input type="text" id="guide-edit-category"></div>
+          <div class="field"><label for="guide-edit-tags">Tags</label><input type="text" id="guide-edit-tags"></div>
           <div class="field"><label id="guide-edit-default-label">Default reading mode</label><div class="view-toggle edit-default-view-toggle" id="guide-edit-default" role="group" aria-labelledby="guide-edit-default-label"><button type="button" data-default-view="wizard">&#9776; Guided</button><button type="button" data-default-view="article">&para; Article</button></div><p class="field-help">Choose which reading mode opens first for this guide.</p></div>
           ${latestReport ? '<div class="field"><label>Latest saved report</label><div class="spec-actions"><button class="btn btn-ghost btn-sm" id="guide-report-copy" type="button">&#10697; Copy summary</button><button class="btn btn-ghost btn-sm" id="guide-report-download" type="button">&darr; Download .md</button></div></div>' : ''}
           <div class="spec-actions"><button class="btn btn-ghost" data-close type="button">&times; Cancel</button><button class="btn btn-primary" id="guide-edit-save" type="button">&#10003; Save</button></div>
@@ -345,9 +345,18 @@
   backdrop.addEventListener('click', () => { rail.classList.remove('open'); backdrop.classList.remove('open'); });
 
   const notes = document.getElementById('notesDrawer');
-  document.getElementById('openNotes').addEventListener('click', () => notes.classList.add('open'));
-  document.getElementById('openNotesDesktop').addEventListener('click', () => notes.classList.add('open'));
-  document.getElementById('closeNotes').addEventListener('click', () => notes.classList.remove('open'));
+  const openNotesDrawer = () => {
+    notes.classList.add('open');
+    notes.setAttribute('aria-hidden', 'false');
+    setTimeout(() => document.getElementById('notesArea').focus(), 0);
+  };
+  const closeNotesDrawer = () => {
+    notes.classList.remove('open');
+    notes.setAttribute('aria-hidden', 'true');
+  };
+  document.getElementById('openNotes').addEventListener('click', openNotesDrawer);
+  document.getElementById('openNotesDesktop').addEventListener('click', openNotesDrawer);
+  document.getElementById('closeNotes').addEventListener('click', closeNotesDrawer);
 })();
 </script>
 </body>

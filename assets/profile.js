@@ -85,11 +85,11 @@ function escapeHtmlP(str) {
 function buildContainerfileModalHTML() {
   return `
   <div class="modal-backdrop hidden" id="cf-backdrop">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cf-title">
       <button class="modal-close" id="cf-close" aria-label="Close">&times;</button>
-      <h2>Containerfile detection</h2>
+      <h2 id="cf-title">Containerfile detection</h2>
       <p class="hint">Upload your build's Containerfile to auto-detect installed packages and your image branch. Re-upload any time \u2014 wizard steps that declare relevant packages will show a match against whatever was parsed most recently. Nothing here leaves this browser.</p>
-      <div class="dropzone" id="cf-dropzone">
+      <div class="dropzone" id="cf-dropzone" role="button" tabindex="0" aria-label="Choose a Containerfile">
         <strong>Click to upload</strong> or drag your Containerfile here.
         <input type="file" id="cf-file-input" accept=".txt,text/plain,Containerfile,*" style="display:none">
       </div>
@@ -160,6 +160,9 @@ function wireContainerfileModal() {
     reader.readAsText(file);
   }
   dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+  });
   fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
   dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
   dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));

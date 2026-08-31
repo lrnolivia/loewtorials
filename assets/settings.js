@@ -104,14 +104,14 @@ function bootAppearance() {
 function buildSettingsModalHTML() {
   return '' +
   '<div class="modal-backdrop hidden" id="settings-backdrop">' +
-    '<div class="modal settings-drawer">' +
+    '<div class="modal settings-drawer" role="dialog" aria-modal="true" aria-labelledby="settings-title">' +
       '<button class="modal-close" id="settings-close" aria-label="Close">&times;</button>' +
-      '<h2>Layout &amp; data</h2>' +
+      '<h2 id="settings-title">Layout &amp; data</h2>' +
       '<p class="hint">Appearance lives in the paintbrush menu. Data and accessibility settings save to this browser.</p>' +
 
       '<div class="settings-grid">' +
         '<div class="field">' +
-          '<label>Text size — <span id="text-scale-val"></span></label>' +
+          '<label for="set-text-scale">Text size — <span id="text-scale-val"></span></label>' +
           '<input type="range" id="set-text-scale" min="0.85" max="1.3" step="0.05">' +
         '</div>' +
       '</div>' +
@@ -125,7 +125,7 @@ function buildSettingsModalHTML() {
       '<div class="divider">sync</div>' +
       '<p class="hint" id="sync-status-line"></p>' +
       '<div class="field">' +
-        '<label>Site password</label>' +
+        '<label for="sync-password-field">Site password</label>' +
         '<input type="password" id="sync-password-field" placeholder="Enter to set/change" autocomplete="new-password">' +
       '</div>' +
       '<div class="spec-actions">' +
@@ -161,7 +161,7 @@ function injectSettingsModalStyles() {
     .settings-grid{ display:grid; grid-template-columns: 1fr; gap:0 16px; }
     .settings-grid .field{ grid-column: span 1; }
     #settings-backdrop{ justify-content:flex-end; padding:0; }
-    #settings-backdrop .settings-drawer{ min-height:100vh; width:min(520px,100vw); max-width:none; border-radius:0; overflow-y:auto; padding-top:calc(var(--util-h) + 32px); }
+    #settings-backdrop .settings-drawer{ min-height:0; height:100vh; height:100dvh; width:min(520px,100vw); max-width:none; border-radius:0; overflow-y:auto; padding-top:calc(var(--util-h) + 32px); }
     #settings-backdrop.hidden .settings-drawer{ transform:translate3d(100%,0,0); }
     input[type=range]{ width:100%; accent-color: var(--a1); }
   `;

@@ -68,9 +68,9 @@
     </div>
 
     <div class="toolbar">
-      <input type="search" id="searchInput" placeholder="Search wizards, tags, descriptions&hellip;">
-      <select id="categorySelect"><option value="">All categories</option></select>
-      <select id="sortSelect">
+      <input type="search" id="searchInput" placeholder="Search wizards, tags, descriptions&hellip;" aria-label="Search wizards">
+      <select id="categorySelect" aria-label="Filter by category"><option value="">All categories</option></select>
+      <select id="sortSelect" aria-label="Sort wizards">
         <option value="name">Sort: Name</option>
         <option value="date-desc">Sort: Newest first</option>
         <option value="date-asc">Sort: Oldest first</option>
@@ -88,13 +88,13 @@
 
 <!-- ---------------- Manage-wizards modal ---------------- -->
 <div class="modal-backdrop hidden" id="manageModal">
-  <div class="modal" style="max-width:760px;">
-    <button class="modal-close" id="manageModalClose">&times;</button>
-    <h2>Manage wizards</h2>
+  <div class="modal" style="max-width:760px;" role="dialog" aria-modal="true" aria-labelledby="manageModalTitle">
+    <button class="modal-close" id="manageModalClose" aria-label="Close">&times;</button>
+    <h2 id="manageModalTitle">Manage wizards</h2>
     <p class="hint">Every wizard on this device, including hidden and archived ones — edit, archive, hide, export, or delete from one place.</p>
     <div class="toolbar" style="margin-bottom:16px;">
-      <input type="search" id="manageSearchInput" placeholder="Filter by title, category, tag&hellip;">
-      <select id="manageStatusSelect">
+      <input type="search" id="manageSearchInput" placeholder="Filter by title, category, tag&hellip;" aria-label="Filter managed wizards">
+      <select id="manageStatusSelect" aria-label="Filter managed wizards by status">
         <option value="all">All statuses</option>
         <option value="active">Active</option>
         <option value="solved">Solved</option>
@@ -108,9 +108,9 @@
 
 <!-- ---------------- Add-wizard modal ---------------- -->
 <div class="modal-backdrop hidden" id="addModal">
-  <div class="modal">
-    <button class="modal-close" id="addModalClose">&times;</button>
-    <h2>Add a new wizard</h2>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
+    <button class="modal-close" id="addModalClose" aria-label="Close">&times;</button>
+    <h2 id="addModalTitle">Add a new wizard</h2>
     <p class="hint">Wizards live as plain Markdown files. Upload or paste one or more below, or get one written for you first.</p>
 
     <div class="add-tabs">
@@ -119,13 +119,13 @@
     </div>
 
     <div class="add-pane active" id="paneUpload">
-      <div class="dropzone" id="dropzone">
+      <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Choose wizard Markdown files">
         Drag one or more <strong>.md</strong> files here, or click to choose them.
         <input type="file" id="mdFileInput" accept=".md,text/markdown,text/plain" multiple style="display:none">
       </div>
       <div class="divider">or paste one</div>
       <div class="field">
-        <textarea id="mdPasteArea" placeholder="Paste your wizard Markdown here&hellip;"></textarea>
+        <textarea id="mdPasteArea" placeholder="Paste your wizard Markdown here&hellip;" aria-label="Wizard Markdown"></textarea>
       </div>
       <div id="parseResult"></div>
       <div style="text-align:right; margin-top:16px;">
@@ -164,24 +164,24 @@
 
 <!-- ---------------- Edit-details modal ---------------- -->
 <div class="modal-backdrop hidden" id="editModal">
-  <div class="modal">
-    <button class="modal-close" id="editModalClose">&times;</button>
-    <h2>Edit wizard details</h2>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+    <button class="modal-close" id="editModalClose" aria-label="Close">&times;</button>
+    <h2 id="editModalTitle">Edit wizard details</h2>
     <p class="hint">Organize how this wizard shows up on the dashboard. This doesn't change its steps.</p>
     <div class="field">
-      <label>Title</label>
+      <label for="editTitleInput">Title</label>
       <input type="text" id="editTitleInput" placeholder="Wizard title">
     </div>
     <div class="field">
-      <label>Category</label>
+      <label for="editCategory">Category</label>
       <input type="text" id="editCategory" placeholder="e.g. Storage &amp; Filesystems">
     </div>
     <div class="field">
-      <label>Tags (comma separated)</label>
+      <label for="editTags">Tags (comma separated)</label>
       <input type="text" id="editTags" placeholder="e.g. ntfs, dual-boot, linux">
     </div>
     <div class="field">
-      <label>Date</label>
+      <label for="editDate">Date</label>
       <input type="date" id="editDate">
     </div>
     <div style="display:flex; justify-content:flex-end; gap:10px;">

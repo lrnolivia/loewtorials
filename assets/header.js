@@ -90,18 +90,18 @@ function buildUtilityHTML() {
         '<div class="mini-specs" id="hdrMiniSpecs">' + miniSpecsHtml + '</div>' +
         '<div class="header-spacer"></div>' +
         '<div class="hsearch" id="hdrSearch">' +
-          '<button class="hsearch-btn" id="hdrSearchOpenBtn" title="Jump to a wizard">\u{1F50D}</button>' +
+          '<button class="hsearch-btn" id="hdrSearchOpenBtn" title="Jump to a wizard" aria-label="Search guides">\u{1F50D}</button>' +
           '<div class="hsearch-box">' +
-            '<input type="text" id="hdrSearchInput" placeholder="Jump to a wizard\u2026">' +
-            '<button class="hsearch-close" id="hdrSearchCloseBtn" type="button">\u2715</button>' +
+            '<input type="text" id="hdrSearchInput" placeholder="Jump to a wizard\u2026" aria-label="Search guides">' +
+            '<button class="hsearch-close" id="hdrSearchCloseBtn" type="button" aria-label="Close search">\u2715</button>' +
           '</div>' +
           '<div class="hsearch-drop" id="hdrSearchDrop"></div>' +
         '</div>' +
         '<div class="theme-pop-anchor" id="hdrPaintAnchor">' +
-          '<button class="header-icon-btn" id="hdrPaintBtn" title="Theme">\u{1F58C}\uFE0F</button>' +
+          '<button class="header-icon-btn" id="hdrPaintBtn" title="Theme" aria-label="Appearance settings">\u{1F58C}\uFE0F</button>' +
           '<div class="theme-pop" id="hdrThemePop"></div>' +
         '</div>' +
-        '<button class="header-icon-btn" id="hdrGearBtn" title="Settings">\u2699\uFE0F</button>' +
+        '<button class="header-icon-btn" id="hdrGearBtn" title="Settings" aria-label="Layout and data settings">\u2699\uFE0F</button>' +
       '</div>' +
     '</div>' +
     '<div class="a3-stripe"></div>' +
@@ -156,7 +156,7 @@ function buildThemePopHTML() {
     return '' +
       '<div class="font-override-row">' +
         '<label>' + label + ' font</label>' +
-        '<select data-font-slot="' + kind + '"><option value="">Default</option>' + opts + '</select>' +
+        '<select data-font-slot="' + kind + '" aria-label="' + label + ' font"><option value="">Default</option>' + opts + '</select>' +
       '</div>';
   }
 

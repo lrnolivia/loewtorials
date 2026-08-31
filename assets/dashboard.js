@@ -505,6 +505,9 @@
   ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
   dropzone.addEventListener('drop', e => { handleFiles(e.dataTransfer.files); });
   dropzone.addEventListener('click', () => document.getElementById('mdFileInput').click());
+  dropzone.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById('mdFileInput').click(); }
+  });
 
   // ---------------- review step: edit labels, not content ----------------
   function openReviewPane() {
