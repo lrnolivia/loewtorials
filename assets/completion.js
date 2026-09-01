@@ -436,5 +436,5 @@ function initCompletionModal(wizardCtx) {
   };
 
   backdrop.classList.remove('hidden');
-  if (window.ModalFocus) ModalFocus.activate(backdrop, { onEscape: close, initialFocus: '#completion-close' });
+  if (window.ModalFocus) ModalFocus.activate(backdrop, { onEscape: close, initialFocus: '#completion-close', returnFocus: '#hdrRailBtn' });
 }

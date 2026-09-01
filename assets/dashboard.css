@@ -50,6 +50,21 @@
 .toolbar input:focus, .toolbar select:focus{ border-color:var(--a1); }
 .toolbar .spacer{ flex:1; }
 
+@media (max-width:600px){
+  .dash-content{ padding-bottom:56px; }
+  .app-hero{ padding-top:22px; }
+  .toolbar{
+    display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:10px; padding:13px; margin-bottom:22px;
+  }
+  .toolbar input[type=search]{ grid-column:1 / -1; min-width:0; width:100%; }
+  .toolbar select{ min-width:0; width:100%; }
+  .toolbar-check{ white-space:normal; align-self:center; }
+  .toolbar .btn{ width:100%; min-width:0; justify-content:center; padding-inline:10px; }
+  .wizard-grid{ grid-template-columns:minmax(0,1fr); gap:20px; }
+  .wizard-card{ padding:18px; }
+}
+
 .wizard-grid{
   display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:24px;
 }

@@ -38,6 +38,9 @@
 
 <div class="shell-grid app" id="wizardRoot">
   <aside class="rail" id="rail" aria-label="Wizard map">
+    <div class="rail-mobile-header">
+      <a class="rail-home-mobile" href="index.html" data-rail-first data-close-rail>&#8962; Back home</a>
+    </div>
     <div id="railHeroMount"></div>
     <div class="rail-guide-info">
       <p class="rail-title">Current guide</p>
@@ -52,18 +55,14 @@
     <p class="rail-title rail-nav-title" id="railTitle">Guide steps</p>
     <div data-w="railContent"></div>
     <div class="rail-actions">
-      <button class="btn btn-ghost btn-sm" id="openHelpDesktop">&#10022; Need help</button>
-      <button class="btn btn-primary btn-sm" id="markSolvedBtn" style="display:none;">&#10003; Mark solved / finished</button>
+      <button class="btn btn-ghost btn-sm rail-action-mobile" id="editGuideMobile" data-close-rail>&#9998; Edit info</button>
+      <button class="btn btn-ghost btn-sm rail-action-mobile" id="openNotesMobile" data-close-rail>&#10022; Notes</button>
+      <button class="btn btn-ghost btn-sm" id="openHelpDesktop" data-close-rail>&#10022; Need help</button>
+      <button class="btn btn-primary btn-sm" id="markSolvedBtn" data-close-rail style="display:none;">&#10003; Mark solved / finished</button>
     </div>
   </aside>
 
   <main class="stage">
-    <div class="mobile-bar">
-      <button class="map-btn" id="openRail">&#9776; Steps</button>
-      <div class="progress"><span data-w="mobileProgress"></span></div>
-      <button class="map-btn" id="openNotes">&#9998; Notes</button>
-    </div>
-
     <div class="stage-top">
       <div class="guide-heading">
         <p class="eyebrow" data-w="phaseEyebrow">Phase</p>
@@ -308,9 +307,10 @@
           if (compactTitle) compactTitle.textContent = title;
           close(); showToast('Guide info saved.');
         };
-        if (window.ModalFocus) ModalFocus.activate(backdrop, { onEscape: close, initialFocus: '#guide-edit-title' });
+        if (window.ModalFocus) ModalFocus.activate(backdrop, { onEscape: close, initialFocus: '#guide-edit-title', returnFocus: '#hdrRailBtn' });
       }
       document.getElementById('editGuideBtn').addEventListener('click', openEditInfo);
+      document.getElementById('editGuideMobile').addEventListener('click', openEditInfo);
 
       renderBanner();
       updateToggleUi();
@@ -345,12 +345,6 @@
       showError(err.message || 'Could not load this wizard.');
     });
 
-  // chrome: mobile rail + notes drawer
-  const rail = document.getElementById('rail');
-  const backdrop = document.getElementById('railBackdrop');
-  document.getElementById('openRail').addEventListener('click', () => { rail.classList.add('open'); backdrop.classList.add('open'); });
-  backdrop.addEventListener('click', () => { rail.classList.remove('open'); backdrop.classList.remove('open'); });
-
   const notes = document.getElementById('notesDrawer');
   let notesTrigger = null;
   const openNotesDrawer = () => {
@@ -364,9 +358,12 @@
     notes.classList.remove('open');
     notes.setAttribute('aria-hidden', 'true');
     notes.setAttribute('inert', '');
-    if (notesTrigger && notesTrigger.isConnected) notesTrigger.focus();
+    const target = notesTrigger && notesTrigger.isConnected && !notesTrigger.closest('[inert]')
+      ? notesTrigger
+      : document.getElementById('hdrRailBtn');
+    if (target) target.focus();
   };
-  document.getElementById('openNotes').addEventListener('click', openNotesDrawer);
+  document.getElementById('openNotesMobile').addEventListener('click', openNotesDrawer);
   document.getElementById('openNotesDesktop').addEventListener('click', openNotesDrawer);
   document.getElementById('closeNotes').addEventListener('click', closeNotesDrawer);
   notes.addEventListener('keydown', event => { if (event.key === 'Escape') closeNotesDrawer(); });

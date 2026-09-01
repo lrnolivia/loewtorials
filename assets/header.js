@@ -85,6 +85,7 @@ function buildUtilityHTML() {
     '<div class="utility">' +
       '<div class="utility-inner">' +
         (onGuide ? '<button class="home-btn" id="hdrHomeBtn" title="Home" aria-label="Go to dashboard">\u2302 <span>Home</span></button>' : '') +
+        '<button class="home-btn mobile-rail-trigger" id="hdrRailBtn" type="button" aria-label="Open menu" aria-controls="rail" aria-expanded="false">\u2630</button>' +
         '<div class="mini-brand"><span class="mark">\u{1F9F0}</span><span class="word">loewtorials</span></div>' +
         (onGuide ? '<div class="mini-guide-title" id="hdrGuideTitle">Guide</div>' : '') +
         '<div class="mini-specs" id="hdrMiniSpecs">' + miniSpecsHtml + '</div>' +
@@ -416,6 +417,54 @@ function wireIconButtons() {
   if (homeBtn) homeBtn.addEventListener('click', () => {
     location.href = 'index.html';
   });
+
+  const railBtn = document.getElementById('hdrRailBtn');
+  const rail = document.getElementById('rail');
+  const railBackdrop = document.getElementById('railBackdrop');
+  const stage = document.querySelector('.stage');
+  const mobileRail = matchMedia('(max-width: 900px)');
+  if (railBtn && rail && railBackdrop) {
+    const setRailOpen = (open, restoreFocus) => {
+      const mobile = mobileRail.matches;
+      const nextOpen = mobile && open;
+      rail.classList.toggle('open', nextOpen);
+      railBackdrop.classList.toggle('open', nextOpen);
+      document.body.classList.toggle('rail-open', nextOpen);
+      railBtn.setAttribute('aria-expanded', String(nextOpen));
+      railBtn.setAttribute('aria-label', nextOpen ? 'Close menu' : 'Open menu');
+      railBtn.textContent = nextOpen ? '\u00D7' : '\u2630';
+      if (mobile) {
+        rail.toggleAttribute('inert', !nextOpen);
+        rail.setAttribute('aria-hidden', String(!nextOpen));
+        if (stage) stage.toggleAttribute('inert', nextOpen);
+      } else {
+        rail.removeAttribute('inert');
+        rail.removeAttribute('aria-hidden');
+        if (stage) stage.removeAttribute('inert');
+      }
+      if (nextOpen) {
+        requestAnimationFrame(() => {
+          const first = rail.querySelector('[data-rail-first], input, button, a[href]');
+          if (first) first.focus();
+        });
+      } else if (restoreFocus && mobile) {
+        requestAnimationFrame(() => railBtn.focus());
+      }
+    };
+
+    setRailOpen(false, false);
+    railBtn.addEventListener('click', () => setRailOpen(!rail.classList.contains('open'), true));
+    railBackdrop.addEventListener('click', () => setRailOpen(false, true));
+    rail.addEventListener('click', event => {
+      if (event.target.closest('[data-close-rail], .dash-nav button, .rail-search-drop button, .tick, .diamond-row, .outcome-node')) {
+        setRailOpen(false, false);
+      }
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && rail.classList.contains('open')) setRailOpen(false, true);
+    });
+    mobileRail.addEventListener('change', () => setRailOpen(false, false));
+  }
 
   // Threshold uses hysteresis (collapse past 70, only re-expand at the
   // true page top) rather than one fixed number — a single threshold fights

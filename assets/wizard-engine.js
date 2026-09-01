@@ -112,7 +112,7 @@ function createWizardEngine(rootEl, wizard, opts) {
   }
 
   // ---------------- render: rail ----------------
-  function renderRail(railContentEl, mobileProgressEl) {
+  function renderRail(railContentEl) {
     let html = '';
 
     function tickState(id) {
@@ -160,18 +160,7 @@ function createWizardEngine(rootEl, wizard, opts) {
     railContentEl.querySelectorAll('[data-step-link]').forEach(link => link.addEventListener('click', () => {
       const id = link.getAttribute('data-step-link');
       if (id && id !== currentId) goTo(id);
-      const rail = document.getElementById('rail');
-      const backdrop = document.getElementById('railBackdrop');
-      if (rail) rail.classList.remove('open');
-      if (backdrop) backdrop.classList.remove('open');
     }));
-
-    if (mobileProgressEl) {
-      const order = stepOrder();
-      const idx = order.indexOf(currentId);
-      const pct = idx >= 0 ? Math.round(((idx + 1) / order.length) * 100) : 0;
-      mobileProgressEl.style.transform = 'scaleX(' + (pct / 100) + ')';
-    }
   }
 
   // ---------------- render: stage ----------------
@@ -336,10 +325,9 @@ function createWizardEngine(rootEl, wizard, opts) {
 
   function render() {
     const railContentEl = rootEl.querySelector('[data-w="railContent"]');
-    const mobileProgressEl = rootEl.querySelector('[data-w="mobileProgress"]');
     const cardEl = rootEl.querySelector('[data-w="stepCard"]');
     const eyebrowEl = rootEl.querySelector('[data-w="phaseEyebrow"]');
-    if (railContentEl) renderRail(railContentEl, mobileProgressEl);
+    if (railContentEl) renderRail(railContentEl);
     if (cardEl) renderStage(cardEl, eyebrowEl);
   }
 

@@ -225,7 +225,7 @@
     }
     backdrop.querySelector('.modal-close').onclick = close;
     backdrop.onclick = function (event) { if (event.target === backdrop) close(); };
-    if (window.ModalFocus) ModalFocus.activate(backdrop, { onEscape: close, initialFocus: questionEl });
+    if (window.ModalFocus) ModalFocus.activate(backdrop, { onEscape: close, initialFocus: questionEl, returnFocus: '#hdrRailBtn' });
     else setTimeout(function () { questionEl.focus(); }, 0);
 
     function requestPackage() {

@@ -16,15 +16,6 @@
   const toast = document.getElementById('toast');
   const categoryNav = document.getElementById('categoryNav');
 
-  // mobile sidebar toggle (mirrors the wizard page's rail/backdrop wiring)
-  const rail = document.getElementById('rail');
-  const railBackdrop = document.getElementById('railBackdrop');
-  const openRailBtn = document.getElementById('openRail');
-  if (openRailBtn && rail && railBackdrop) {
-    openRailBtn.addEventListener('click', () => { rail.classList.add('open'); railBackdrop.classList.add('open'); });
-    railBackdrop.addEventListener('click', () => { rail.classList.remove('open'); railBackdrop.classList.remove('open'); });
-  }
-
   function showToast(msg, isError) {
     toast.textContent = msg;
     toast.className = 'toast show' + (isError ? ' error' : '');
@@ -278,7 +269,7 @@
     manageSearchInput.value = '';
     manageStatusSelect.value = 'all';
     renderManageList();
-    if (window.ModalFocus) ModalFocus.activate(manageModal, { onEscape: closeManageModal, initialFocus: manageSearchInput });
+    if (window.ModalFocus) ModalFocus.activate(manageModal, { onEscape: closeManageModal, initialFocus: manageSearchInput, returnFocus: '#hdrRailBtn' });
   });
   document.getElementById('manageModalClose').addEventListener('click', closeManageModal);
   manageModal.addEventListener('click', e => { if (e.target === manageModal) closeManageModal(); });
@@ -390,7 +381,7 @@
   document.getElementById('newWizardBtn').addEventListener('click', () => {
     addModal.classList.remove('hidden');
     resetAddModal();
-    if (window.ModalFocus) ModalFocus.activate(addModal, { onEscape: closeAddModal, initialFocus: '#addModalClose' });
+    if (window.ModalFocus) ModalFocus.activate(addModal, { onEscape: closeAddModal, initialFocus: '#addModalClose', returnFocus: '#hdrRailBtn' });
   });
   document.getElementById('addModalClose').addEventListener('click', closeAddModal);
 

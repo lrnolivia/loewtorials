@@ -40,14 +40,17 @@
 
 <div class="shell-grid dash-shell" id="dashRoot">
   <aside class="rail" id="rail" aria-label="Dashboard navigation">
+    <div class="rail-mobile-header">
+      <strong>Dashboard menu</strong>
+    </div>
     <p class="rail-title">loewtorials</p>
     <p class="rail-sub">Dashboard</p>
     <div class="rail-search">
       <input type="search" id="railSearchInput" placeholder="Search" aria-label="Search guides">
       <div class="rail-search-drop" id="railSearchDrop"></div>
     </div>
-    <button class="btn btn-primary btn-sm" id="newWizardBtn" style="width:100%; justify-content:center; margin-bottom:8px;">+ New wizard</button>
-    <button class="btn btn-ghost btn-sm" id="manageWizardsBtn" style="width:100%; justify-content:center; margin-bottom:18px;">&#9776; Manage wizards</button>
+    <button class="btn btn-primary btn-sm" id="newWizardBtn" data-close-rail style="width:100%; justify-content:center; margin-bottom:8px;">+ New wizard</button>
+    <button class="btn btn-ghost btn-sm" id="manageWizardsBtn" data-close-rail style="width:100%; justify-content:center; margin-bottom:18px;">&#9776; Manage wizards</button>
 
     <nav class="dash-nav" id="viewTabs" aria-label="Dashboard filters">
       <button data-status="all" class="active">&#9673; All wizards <span class="count" id="countAll"></span></button>
@@ -63,10 +66,6 @@
 
   <main class="stage dash-content">
     <div id="appHeroMount"></div>
-
-    <div class="mobile-bar">
-      <button class="map-btn" id="openRail">&#9776; Menu</button>
-    </div>
 
     <div class="toolbar">
       <input type="search" id="searchInput" placeholder="Search wizards, tags, descriptions&hellip;" aria-label="Search wizards">
