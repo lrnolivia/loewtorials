@@ -80,29 +80,33 @@ function buildUtilityHTML() {
   const onGuide = document.body.classList.contains('guide-page');
   const miniSpecsHtml = HEADER_SPECS.map(s => '<span class="mini-spec" title="' + s.label + '" aria-label="' + s.label + '">' + s.icon + '</span>').join('');
 
+  const searchIcon = '<svg class="nav-glyph" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 5 5"></path></svg>';
+  const themeIcon = '<svg class="nav-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="m15.5 3.5 5 5-10.8 10.8-6.2 1.2 1.2-6.2Z"></path><path d="m13.5 5.5 5 5M4.7 14.3l5 5"></path></svg>';
+  const settingsIcon = '<svg class="nav-glyph" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2.8v2.1M12 19.1v2.1M2.8 12h2.1M19.1 12h2.1M5.5 5.5 7 7M17 17l1.5 1.5M18.5 5.5 17 7M7 17l-1.5 1.5"></path></svg>';
+  const guideMetaHtml = '<div class="compact-guide-meta"><div class="mini-guide-title" id="hdrGuideTitle">Guide</div><div class="mini-specs" id="hdrMiniSpecs">' + miniSpecsHtml + '</div></div>';
+
   return '' +
   '<header class="app-header">' +
     '<div class="utility">' +
       '<div class="utility-inner">' +
-        (onGuide ? '<button class="home-btn" id="hdrHomeBtn" title="Home" aria-label="Go to dashboard">\u2302 <span>Home</span></button>' : '') +
+        (onGuide ? '<button class="home-btn back-btn" id="hdrBackBtn" title="Back to dashboard" aria-label="Back to dashboard">\u2190 <span>Back</span></button>' : '') +
         '<button class="home-btn mobile-rail-trigger" id="hdrRailBtn" type="button" aria-label="Open menu" aria-controls="rail" aria-expanded="false">\u2630</button>' +
         '<div class="mini-brand"><span class="mark">\u{1F9F0}</span><span class="word">loewtorials</span></div>' +
-        (onGuide ? '<div class="mini-guide-title" id="hdrGuideTitle">Guide</div>' : '') +
-        '<div class="mini-specs" id="hdrMiniSpecs">' + miniSpecsHtml + '</div>' +
+        (onGuide ? guideMetaHtml : '<div class="mini-specs" id="hdrMiniSpecs">' + miniSpecsHtml + '</div>') +
         '<div class="header-spacer"></div>' +
         '<div class="hsearch" id="hdrSearch">' +
-          '<button class="hsearch-btn" id="hdrSearchOpenBtn" title="Jump to a wizard" aria-label="Search guides">\u{1F50D}</button>' +
+          '<button class="hsearch-btn" id="hdrSearchOpenBtn" title="Jump to a wizard" aria-label="Search guides">' + searchIcon + '</button>' +
           '<div class="hsearch-box">' +
             '<input type="text" id="hdrSearchInput" placeholder="Jump to a wizard\u2026" aria-label="Search guides">' +
             '<button class="hsearch-close" id="hdrSearchCloseBtn" type="button" aria-label="Close search">\u2715</button>' +
           '</div>' +
           '<div class="hsearch-drop" id="hdrSearchDrop"></div>' +
         '</div>' +
-        '<div class="theme-pop-anchor" id="hdrPaintAnchor">' +
-          '<button class="header-icon-btn" id="hdrPaintBtn" title="Theme" aria-label="Appearance settings">\u{1F58C}\uFE0F</button>' +
+      '<div class="theme-pop-anchor" id="hdrPaintAnchor">' +
+          '<button class="header-icon-btn" id="hdrPaintBtn" title="Theme" aria-label="Appearance settings">' + themeIcon + '</button>' +
           '<div class="theme-pop" id="hdrThemePop"></div>' +
         '</div>' +
-        '<button class="header-icon-btn" id="hdrGearBtn" title="Settings" aria-label="Layout and data settings">\u2699\uFE0F</button>' +
+        '<button class="header-icon-btn" id="hdrGearBtn" title="Settings" aria-label="Layout and data settings">' + settingsIcon + '</button>' +
       '</div>' +
     '</div>' +
     '<div class="a3-stripe"></div>' +
@@ -413,8 +417,8 @@ function wireIconButtons() {
     settingsModal.open();
   });
 
-  const homeBtn = document.getElementById('hdrHomeBtn');
-  if (homeBtn) homeBtn.addEventListener('click', () => {
+  const backBtn = document.getElementById('hdrBackBtn');
+  if (backBtn) backBtn.addEventListener('click', () => {
     location.href = 'index.html';
   });
 
@@ -527,7 +531,12 @@ function initHeader() {
   if (document.body.classList.contains('guide-page') && railHeroMount) {
     const holder = document.createElement('div');
     holder.innerHTML = buildHeroHTML();
-    railHeroMount.appendChild(holder.querySelector('.app-hero'));
+    const brandLink = document.createElement('a');
+    brandLink.className = 'rail-brand-home';
+    brandLink.href = 'index.html';
+    brandLink.setAttribute('aria-label', 'Back to dashboard');
+    brandLink.appendChild(holder.querySelector('.app-hero'));
+    railHeroMount.appendChild(brandLink);
   } else if (heroMount) heroMount.innerHTML = buildHeroHTML();
 
   _themePrefs = currentThemePrefs();

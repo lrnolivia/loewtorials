@@ -52,7 +52,7 @@
 
 @media (max-width:600px){
   .dash-content{ padding-bottom:56px; }
-  .app-hero{ padding-top:22px; }
+  .app-hero{ padding-top:0; }
   .toolbar{
     display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr);
     gap:10px; padding:13px; margin-bottom:22px;

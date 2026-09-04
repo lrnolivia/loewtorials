@@ -54,6 +54,9 @@ a.outcome-node:hover{ transform:translate3d(3px,0,0); }
 h1.page-title{ font-family:var(--f-display); font-weight:700; font-size:clamp(1.375rem, 3.4vw, 2rem); margin:0; letter-spacing:-0.01em; }
 .page-sub{ color:var(--tx-muted); margin:8px 0 0; font-size:0.90625rem; max-width:52ch; }
 .page-subtitle{ color:var(--tx); margin:8px 0 0; font-size:1rem; font-weight:700; max-width:58ch; }
+.page-sub, .page-subtitle{
+  text-shadow:0 1px 0 var(--bg), 0 0 10px color-mix(in srgb,var(--surf) 78%,transparent);
+}
 .util-row{ display:flex; gap:8px; flex:none; }
 
 /* .step-card is the other "card" from §4 (the main per-step surface in
@@ -292,6 +295,9 @@ a.outcome-node:hover{ border-color:var(--a1); color:var(--a1); }
 @media (max-width:900px){ #openNotesDesktop{ display:none; } }
 
 .guide-page #railHeroMount .app-hero{ display:block; padding:0 0 22px; max-width:none; }
+.rail-brand-home{ display:block; color:inherit; text-decoration:none; }
+.rail-brand-home:hover{ color:inherit; text-decoration:none; }
+.rail-brand-home:focus-visible{ outline-offset:5px; }
 .guide-page #railHeroMount .app-hero .mark{ font-size:2.4rem; }
 .guide-page #railHeroMount .app-hero h1{ font-size:1.45rem; }
 .guide-page #railHeroMount .app-hero .tagline{ font-size:.8rem; }

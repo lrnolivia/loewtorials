@@ -31,7 +31,7 @@
   }
 
   function swap(el) {
-    if (!el || reduce.matches) return;
+    if (!el || reduce.matches || isSafari) return;
     el.classList.remove('motion-swap');
     requestAnimationFrame(() => {
       el.classList.add('motion-swap');
@@ -58,7 +58,7 @@
 
   function init() {
     if (isSafari) document.documentElement.classList.add('is-safari');
-    document.documentElement.classList.add('motion-ready');
+    else document.documentElement.classList.add('motion-ready');
     scan(document);
     new MutationObserver(records => requestAnimationFrame(() =>
       records.forEach(record => record.addedNodes.forEach(scan))))
