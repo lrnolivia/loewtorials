@@ -1,5 +1,7 @@
 # loewtorials — handoff
 
+> Universal process authority: read `lrnolivia/loew-runner@main/LOEW_CHAT_BIBLE.md` and `contracts/manifest.json` first. This file is a repository-specific overlay and must not fork the universal operating contract.
+
 Package: `loewtorials_7.zip` (this delivery)
 
 ## Done this round (new)
