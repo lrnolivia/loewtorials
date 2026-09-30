@@ -1,0 +1,75 @@
+name: loewtorials work coordination
+
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "38,8 * * * *"
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [audit, cleanup]
+        default: audit
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  admission:
+    name: Runner coordination admission
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          repository: lrnolivia/loew-runner
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - name: Verify live ownership and exact PR scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TASK_PR: ${{ github.event.pull_request.number }}
+        run: |
+          node -e 'require("fs").writeFileSync(process.env.RUNNER_TEMP + "/request.json", JSON.stringify({pr: Number(process.env.TASK_PR)}))'
+          node scripts/coordinate.mjs pr-gate loewtorials "$RUNNER_TEMP/request.json"
+
+  hygiene:
+    name: Runner managed branch hygiene
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    concurrency:
+      group: loewtorials-managed-branch-cleanup
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          repository: lrnolivia/loew-runner
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - name: Reconcile and remove completed managed branches
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COORD_ACTION: ${{ inputs.action || 'cleanup' }}
+        run: node scripts/coordinate.mjs "$COORD_ACTION" loewtorials > "$RUNNER_TEMP/coordination-result.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loewtorials-coordination-receipt
+          path: ${{ runner.temp }}/coordination-result.json
+      - name: Show coordination findings
+        if: always()
+        run: |
+          if [ -s "$RUNNER_TEMP/coordination-result.json" ]; then
+            cat "$RUNNER_TEMP/coordination-result.json" >> "$GITHUB_STEP_SUMMARY"
+          fi
