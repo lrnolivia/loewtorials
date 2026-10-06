@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          repository: lrnolivia/loew-runner
+          repository: lrnolivia/relay
           ref: main
           persist-credentials: false
       - uses: actions/setup-node@v7
@@ -51,7 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          repository: lrnolivia/loew-runner
+          repository: lrnolivia/relay
           ref: main
           persist-credentials: false
       - uses: actions/setup-node@v7
