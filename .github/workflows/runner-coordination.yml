@@ -4,7 +4,8 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: "38,8 * * * *"
+    # Daily safety sweep; PR admission and manual cleanup remain immediate.
+    - cron: "18 6 * * *"
   workflow_dispatch:
     inputs:
       action:
@@ -20,6 +21,9 @@ jobs:
   admission:
     name: Runner coordination admission
     if: github.event_name == 'pull_request'
+    concurrency:
+      group: loewtorials-admission-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
